@@ -39,8 +39,8 @@ discussion.
 __Quelles garanties apportez-vous ?__
 
 Pour être clair : _aucune_. Ce logiciel ainsi que le service en ligne
-associé ont pour but de faciliter, sous votre propre responsabilité,
-une attestation dérogatoire de déplacement conforme à ce qu'exige la
+associé ont pour but de faciliter, sous votre propre responsabilité, la création
+d'une attestation dérogatoire de déplacement conforme à ce qu'exige la
 réglementation. C'est à vous de vous assurer que les informations qui
 figurent sur le document sont exactes. Le plus grand soin a également
 été apporté au contenu du QR-code contenu dans l'attestation afin de
