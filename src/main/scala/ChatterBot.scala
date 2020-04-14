@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 
 import Bot._
 import PDFBuilder.BuildPDF
-import TelegramSender.{SendFile, SendText}
+import TelegramSender.{DeletePreviousMessage, SendFile, SendText}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
@@ -71,6 +71,9 @@ private class ChatterBot(
       caption: Option[String] = None
   ): Unit =
     outgoing ! SendFile(ChatId(user.id), file, caption)
+
+  private[this] def deleteMessage(messageId: Int): Unit =
+    outgoing ! DeletePreviousMessage(ChatId(user.id), messageId)
 
   // Successive data to ask the user. The content of each tuple are:
   //  - the prompt
@@ -143,6 +146,9 @@ private class ChatterBot(
               Behaviors.same
             case FromUser(PrivateCommand("help", _)) =>
               help()
+              Behaviors.same
+            case FromUser(PrivateCallbackQuery(Some(data))) =>
+              deleteMessage(data.toInt)
               Behaviors.same
             case _: FromUser =>
               sendText("Commencez par /start")
@@ -250,6 +256,9 @@ private class ChatterBot(
               requestData(textualData :+ text)
             }
         }
+      case FromUser(PrivateCallbackQuery(Some(data))) =>
+        deleteMessage(data.toInt)
+        Behaviors.same
       case msg =>
         context.log.warn(s"Unexpected message: $msg")
         Behaviors.same
@@ -336,6 +345,9 @@ private class ChatterBot(
           s"Erreur interne lors de la génération du PDF, reessayez plus tard: $e"
         )
         offerCommands(data)
+      case FromUser(PrivateCallbackQuery(Some(data))) =>
+        deleteMessage(data.toInt)
+        Behaviors.same
     }
   }
 

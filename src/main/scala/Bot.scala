@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import com.bot4s.telegram.api.declarative.Commands
+import com.bot4s.telegram.api.declarative.{Callbacks, Commands}
 import com.bot4s.telegram.api.{ChatActions, RequestHandler}
 import com.bot4s.telegram.clients.AkkaHttpClient
 import com.bot4s.telegram.future.{Polling, TelegramBot}
@@ -24,7 +24,8 @@ private class Bot(
     with Polling
     with IdempotentShutdown
     with Commands[Future]
-    with ChatActions[Future] {
+    with ChatActions[Future]
+    with Callbacks[Future] {
 
   import Bot._
 
@@ -43,6 +44,13 @@ private class Bot(
     Future.successful(())
   }
 
+  override def receiveCallbackQuery(
+      callbackQuery: CallbackQuery
+  ): Future[Unit] = {
+    context.self ! IncomingCallbackQuery(callbackQuery)
+    Future.successful()
+  }
+
   override def onMessage(msg: BotCommand): Behavior[BotCommand] = msg match {
     case ConnectionShutdown(Success(_)) =>
       context.log.error("Telegram connection terminated spontaneously")
@@ -59,6 +67,12 @@ private class Bot(
           findOrSpawnChatterBot(user, chatId) ! parseText(text)
         }
       }
+      Behaviors.same
+    case IncomingCallbackQuery(callbackQuery) =>
+      val chatId = ChatId(callbackQuery.from.id)
+      findOrSpawnChatterBot(callbackQuery.from, chatId) ! PrivateCallbackQuery(
+        callbackQuery.data
+      )
       Behaviors.same
     case RequestChatShutdown(id) =>
       chatters.remove(id).foreach { ref =>
@@ -125,6 +139,8 @@ object Bot {
 
   sealed trait BotCommand
   private case class IncomingMessage(message: Message) extends BotCommand
+  private case class IncomingCallbackQuery(callbackQuery: CallbackQuery)
+      extends BotCommand
   private case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
 
   /**
@@ -147,6 +163,14 @@ object Bot {
     * @param data the textual message
     */
   case class PrivateMessage(data: String) extends PerChatBotCommand
+
+  /**
+    * Callback query
+    *
+    * @param data the callback data
+    */
+  case class PrivateCallbackQuery(data: Option[String])
+      extends PerChatBotCommand
 
   /**
     * Request that a particular conversation actor is shutdown. The corresponding

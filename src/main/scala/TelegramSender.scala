@@ -38,11 +38,38 @@ private class TelegramSender(
       )(res => Sent(res))
       waitForConfirmation
     case SendFile(chatId, file, caption) =>
+      // Three successive messages are sent here:
+      //   1. An indication that the bot is uploading a document
+      //   2. The document itself
+      //   3. Once we have the message id of the message sent at step 2,
+      //      edit the message to add an inline button with a callback
+      //      allowing the document to be removed from the conversation.
+      //      Since we do not want to store more data on the server side,
+      //      the message id is stored into the callback data.
       val sent =
-        for (_ <- client(SendChatAction(chatId, ChatAction.UploadDocument));
-             _ <- client(SendDocument(chatId, file, caption = caption)))
-          yield ()
+        for {
+          _ <- client(SendChatAction(chatId, ChatAction.UploadDocument))
+          message <- client(SendDocument(chatId, file, caption = caption))
+          _ <- client(
+            EditMessageReplyMarkup(
+              Some(chatId),
+              Some(message.messageId),
+              replyMarkup = Some(
+                InlineKeyboardMarkup.singleButton(
+                  InlineKeyboardButton(
+                    "Effacer",
+                    callbackData = Some(message.messageId.toString)
+                  )
+                )
+              )
+            )
+          )
+        } yield ()
       context.pipeToSelf(sent)(Sent)
+      waitForConfirmation
+    case DeletePreviousMessage(chatId, messageId) =>
+      context
+        .pipeToSelf(client(DeleteMessage(chatId, messageId)).map(_ => ()))(Sent)
       waitForConfirmation
     case message =>
       context.log.error(
@@ -100,6 +127,8 @@ object TelegramSender {
       file: InputFile,
       caption: Option[String] = None
   ) extends TelegramOutgoingData
+  case class DeletePreviousMessage(chatId: ChatId, messageId: Int)
+      extends TelegramOutgoingData
 
   private case class Sent(res: Try[Unit]) extends TelegramOutgoingControl
 
