@@ -116,7 +116,7 @@ object Bot {
     * @param debugActor if defined, the actor to send debugging information to
     * @return
     */
-  def makeTelegramBot(
+  def apply(
       token: String,
       perChatStarter: PerChatStarter,
       debugActor: Option[ActorRef[String]]

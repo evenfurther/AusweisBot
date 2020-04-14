@@ -462,7 +462,7 @@ object ChatterBot {
     * @param debugActor if defined, the actor to send debugging messages to
     * @return
     */
-  def makeChatterBot(
+  def apply(
       client: RequestHandler[Future],
       user: User,
       pdfBuilder: ActorRef[PDFBuilder.BuildPDF],

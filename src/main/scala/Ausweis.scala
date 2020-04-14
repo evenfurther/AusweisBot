@@ -69,8 +69,7 @@ object Ausweis extends App {
         parent: ActorRef[Bot.RequestChatShutdown],
         debugActor: Option[ActorRef[String]]
     ) =>
-      ChatterBot
-        .makeChatterBot(client, user, pdfBuilder, db, debugActor)
+      ChatterBot(client, user, pdfBuilder, db, debugActor)
         .withIdleTimeout(
           15.minutes,
           parent,
@@ -102,7 +101,7 @@ object Ausweis extends App {
 
       context.spawn(
         Behaviors
-          .supervise(Bot.makeTelegramBot(botToken, perChatStarter, debugActor))
+          .supervise(Bot(botToken, perChatStarter, debugActor))
           .onFailure[Throwable](
             SupervisorStrategy
               .restartWithBackoff(5.seconds, 30.seconds, 0.2)
