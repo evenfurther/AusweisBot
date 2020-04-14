@@ -1,0 +1,8 @@
+.metals
+.bloop
+target/
+bot.token
+.env
+.idea
+ausweis.jar
+couchdb-volume

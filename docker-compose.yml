@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+  ausweis:
+    image: ausweis
+    build: .
+    depends_on:
+      - db
+    env_file: .env
+    restart: always
+    stop_grace_period: 1s
+    volumes:
+      - "ivy2:/root/.ivy2"
+  db:
+    image: couchdb:2.3.0
+    restart: always
+    volumes:
+      - "./couchdb-volume:/opt/couchdb/data"
+
+volumes:
+  ivy2:
