@@ -31,7 +31,7 @@ private class Bot(
   private[this] implicit val system: ActorSystem = context.system.toClassic
   override val client: RequestHandler[Future] = new AkkaHttpClient(token)
 
-  private[this] val chatters: mutable.Map[ChatId, ActorRef[PrivateMessage]] =
+  private[this] val chatters: mutable.Map[ChatId, ActorRef[PerChatBotCommand]] =
     mutable.Map()
 
   debugActor.foreach(_ ! "Starting")
@@ -40,7 +40,7 @@ private class Bot(
 
   override def receiveMessage(msg: Message): Future[Unit] = {
     context.self ! IncomingMessage(msg)
-    Future.successful()
+    Future.successful(())
   }
 
   override def onMessage(msg: BotCommand): Behavior[BotCommand] = msg match {
@@ -56,7 +56,7 @@ private class Bot(
       message.text.foreach { text =>
         message.from.foreach { user =>
           val chatId = ChatId(user.id)
-          findOrSpawnChatterBot(user, chatId) ! PrivateMessage(text)
+          findOrSpawnChatterBot(user, chatId) ! parseText(text)
         }
       }
       Behaviors.same
@@ -71,7 +71,7 @@ private class Bot(
   private[this] def findOrSpawnChatterBot(
       user: User,
       chatId: ChatId
-  ): ActorRef[PrivateMessage] = {
+  ): ActorRef[PerChatBotCommand] = {
     val ref = chatters.getOrElseUpdate(
       chatId, {
         val chatter = context.spawn(
@@ -105,7 +105,7 @@ object Bot {
       RequestHandler[Future],
       ActorRef[RequestChatShutdown],
       Option[ActorRef[String]]
-  ) => Behavior[PrivateMessage]
+  ) => Behavior[PerChatBotCommand]
 
   /**
     * Make a bot connecting to Telegram servers and handling conversations from users by
@@ -128,11 +128,25 @@ object Bot {
   private case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
 
   /**
+    * The base of message received during a private conversation by the bot
+    */
+  sealed trait PerChatBotCommand
+
+  /**
+    * Private command received for an individual conversation actor
+    *
+    * @param command the command without the leading /
+    * @param args the space-separated command arguments
+    */
+  case class PrivateCommand(command: String, args: Seq[String])
+      extends PerChatBotCommand
+
+  /**
     * Private message received for an individual conversation actor
     *
     * @param data the textual message
     */
-  case class PrivateMessage(data: String)
+  case class PrivateMessage(data: String) extends PerChatBotCommand
 
   /**
     * Request that a particular conversation actor is shutdown. The corresponding
@@ -141,4 +155,21 @@ object Bot {
     * @param chatId the user identifier
     */
   case class RequestChatShutdown(chatId: ChatId) extends BotCommand
+
+  /**
+    * Parse incoming textual message into a regular message or a command starting by '/'.
+    *
+    * @param text the incoming textual message
+    * @return a `Text` or `Command` object
+    */
+  private def parseText(
+      text: String
+  ): PerChatBotCommand =
+    if (text.startsWith("/")) {
+      val words = text.split(' ')
+      PrivateCommand(words.head.substring(1), words.toSeq.tail)
+    } else {
+      PrivateMessage(text)
+    }
+
 }

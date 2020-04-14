@@ -2,6 +2,8 @@ import sbt._
 
 scalaVersion := "2.12.11"
 
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.6.4",
   "com.typesafe.akka" %% "akka-stream" % "2.6.4",

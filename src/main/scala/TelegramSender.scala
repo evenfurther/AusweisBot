@@ -2,19 +2,8 @@ import TelegramSender._
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import com.bot4s.telegram.api.RequestHandler
-import com.bot4s.telegram.methods.ParseMode.ParseMode
-import com.bot4s.telegram.methods.{
-  ChatAction,
-  SendChatAction,
-  SendDocument,
-  SendMessage
-}
-import com.bot4s.telegram.models.{
-  ChatId,
-  InputFile,
-  KeyboardButton,
-  ReplyKeyboardMarkup
-}
+import com.bot4s.telegram.methods._
+import com.bot4s.telegram.models._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -46,14 +35,14 @@ private class TelegramSender(
         client(
           SendMessage(chatId, text, replyMarkup = keys, parseMode = parseMode)
         ).map(_ => ())
-      )(res => Send(res))
+      )(res => Sent(res))
       waitForConfirmation
     case SendFile(chatId, file, caption) =>
       val sent =
         for (_ <- client(SendChatAction(chatId, ChatAction.UploadDocument));
              _ <- client(SendDocument(chatId, file, caption = caption)))
           yield ()
-      context.pipeToSelf(sent)(Send)
+      context.pipeToSelf(sent)(Sent)
       waitForConfirmation
     case message =>
       context.log.error(
@@ -65,9 +54,9 @@ private class TelegramSender(
   private[this] val waitForConfirmation: Behavior[TelegramOutgoingControl] =
     Behaviors.withStash(queueSize) { buffer =>
       Behaviors.receiveMessage {
-        case Send(Success(_)) =>
+        case Sent(Success(_)) =>
           buffer.unstashAll(this)
-        case Send(Failure(t)) =>
+        case Sent(Failure(t)) =>
           context.log.error("Cannot send outgoing Telegram message", t)
           throw t
         case message =>
@@ -104,7 +93,7 @@ object TelegramSender {
       chatId: ChatId,
       text: String,
       keyboard: Seq[Seq[String]] = Seq(),
-      parseMode: Option[ParseMode] = None
+      parseMode: Option[ParseMode.ParseMode] = None
   ) extends TelegramOutgoingData
   case class SendFile(
       chatId: ChatId,
@@ -112,6 +101,6 @@ object TelegramSender {
       caption: Option[String] = None
   ) extends TelegramOutgoingData
 
-  private case class Send(res: Try[Unit]) extends TelegramOutgoingControl
+  private case class Sent(res: Try[Unit]) extends TelegramOutgoingControl
 
 }

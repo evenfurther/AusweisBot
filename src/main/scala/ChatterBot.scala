@@ -1,6 +1,7 @@
 import java.time._
 import java.time.format.DateTimeFormatter
 
+import Bot._
 import PDFBuilder.BuildPDF
 import TelegramSender.{SendFile, SendText}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
@@ -26,7 +27,7 @@ import scala.util.{Failure, Success, Try}
 // not need to use the database again, unless the user requests to delete their private information
 // and start again at the first step.
 private class ChatterBot(
-    context: ActorContext[ChatterBot.ParsedMessage],
+    context: ActorContext[ChatterBot.ChatterBotControl],
     client: RequestHandler[Future],
     user: User,
     pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
@@ -123,24 +124,24 @@ private class ChatterBot(
     * common commands such as `/help`, `/privacy` or `/data` until the user enters
     * `/start` to start data collection in which case we branch to `requestData`.
     */
-  private val startingPoint: Behavior[ParsedMessage] = {
-    Behaviors.withStash[ParsedMessage](5) { buffer =>
+  private val startingPoint: Behavior[ChatterBotControl] = {
+    Behaviors.withStash[ChatterBotControl](5) { buffer =>
       Behaviors.receiveMessage {
         case CachedData(data) =>
           buffer.unstashAll(handleCommands(data))
         case NoCachedData =>
           buffer.unstashAll(Behaviors.receiveMessage {
-            case Command("start", _) =>
+            case FromUser(PrivateCommand("start", _)) =>
               handleStart()
-            case Command("privacy", _) =>
+            case FromUser(PrivateCommand("privacy", _)) =>
               privacyPolicy()
               Behaviors.same
-            case Command("data", _) =>
+            case FromUser(PrivateCommand("data", _)) =>
               sendText(
                 s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
               )
               Behaviors.same
-            case Command("help", _) =>
+            case FromUser(PrivateCommand("help", _)) =>
               help()
               Behaviors.same
             case _: FromUser =>
@@ -163,7 +164,7 @@ private class ChatterBot(
     *
     * @return the `requestData` behavior with empty data
     */
-  private[this] def handleStart(): Behavior[ParsedMessage] = {
+  private[this] def handleStart(): Behavior[ChatterBotControl] = {
     sendText(
       "Collecte des données personnelles - vous pourrez les effacer en refaisant /start et contrôler ce qui est connu en utilisant /data"
     )
@@ -178,7 +179,7 @@ private class ChatterBot(
     */
   private[this] def requestData(
       textualData: Seq[String]
-  ): Behavior[ParsedMessage] = {
+  ): Behavior[ChatterBotControl] = {
     val (fieldText, checker, fieldProposal) = fields(
       textualData.length
     )
@@ -192,32 +193,33 @@ private class ChatterBot(
           s"Database result for user ${user.id} arrived too late"
         )
         Behaviors.same
-      case Command("start", _) =>
+      case FromUser(PrivateCommand("start", _)) =>
         handleStart()
-      case Command("privacy", _) =>
+      case FromUser(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         requestData(textualData)
-      case Command("data", _) =>
+      case FromUser(PrivateCommand("data", _)) =>
         if (textualData.isEmpty) {
           sendText(
             s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
           )
         } else {
           sendText(
-            (s"À ce stade, je connais votre numéro unique Telegram (${user.id}), et vous avez rentré les informations partielles suivantes (non encore stockées dans la base de données) :" +: textualData)
+            ((s"À ce stade, je connais votre numéro unique Telegram (${user.id}), et vous avez rentré " +
+              "les informations partielles suivantes (non encore stockées dans la base de données) :") +: textualData)
               .mkString("\n- ")
           )
         }
         requestData(textualData)
-      case Command("help", _) =>
+      case FromUser(PrivateCommand("help", _)) =>
         help()
         requestData(textualData)
-      case Command(_, _) =>
+      case FromUser(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
         )
         requestData(textualData)
-      case Text(text) =>
+      case FromUser(PrivateMessage(text)) =>
         checker(text) match {
           case Some(errorMsg) =>
             sendText(errorMsg)
@@ -248,11 +250,8 @@ private class ChatterBot(
               requestData(textualData :+ text)
             }
         }
-      case _: PDFSuccess =>
-        context.log.warn("PDF arrived too late")
-        Behaviors.same
-      case PDFFailure(e) =>
-        context.log.warn("PDF error arrived late", e)
+      case msg =>
+        context.log.warn(s"Unexpected message: $msg")
         Behaviors.same
     }
   }
@@ -265,7 +264,7 @@ private class ChatterBot(
     */
   private[this] def offerCommands(
       data: PersonalData
-  ): Behavior[ParsedMessage] = {
+  ): Behavior[ChatterBotControl] = {
     sendButtonsText()
     handleCommands(data)
   }
@@ -278,29 +277,31 @@ private class ChatterBot(
     */
   private[this] def handleCommands(
       data: PersonalData
-  ): Behavior[ParsedMessage] = {
+  ): Behavior[ChatterBotControl] = {
     Behaviors.receiveMessage {
       case CachedData(_) | NoCachedData =>
         context.log.warn(
           s"Database result for user ${user.id} arrived too late"
         )
         Behaviors.same
-      case Text(_) =>
-        sendText("J'ai déjà toutes les informations, essayez /help")
+      case FromUser(PrivateMessage(_)) =>
+        sendText(
+          "J'ai déjà toutes les informations utiles, essayez /help pour voir les commandes disponibles"
+        )
         offerCommands(data)
-      case Command("start", _) =>
+      case FromUser(PrivateCommand("start", _)) =>
         db ! DBProtocol.Delete(user.id)
         sendText(
           "Toutes vos données personnelles ont été définitivement supprimées de la base de donnée"
         )
         handleStart()
-      case Command("privacy", _) =>
+      case FromUser(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         Behaviors.same
-      case Command("help", _) =>
+      case FromUser(PrivateCommand("help", _)) =>
         help()
         Behaviors.same
-      case Command("data", _) =>
+      case FromUser(PrivateCommand("data", _)) =>
         sendText(
           s"Je dispose des données personnelles suivantes :\n" + formatData(
             user,
@@ -308,22 +309,16 @@ private class ChatterBot(
           )
         )
         Behaviors.same
-      case Command("sport", args) =>
-        handlePDFRequest(data, Seq("sport"), args)
-        Behaviors.same
-      case Command("courses", args) =>
-        handlePDFRequest(data, Seq("courses"), args)
-        Behaviors.same
-      case Command("autre", Seq()) =>
+      case FromUser(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
-      case Command("autre", args) =>
+      case FromUser(PrivateCommand("autre", args)) =>
         handlePDFRequest(data, args.head.split("""[;,+-]""").toSeq, args.tail)
         Behaviors.same
-      case Command("vierge", _) =>
+      case FromUser(PrivateCommand("vierge", _)) =>
         handleEmptyPDFRequest(data)
         Behaviors.same
-      case Command(command, _) =>
+      case FromUser(PrivateCommand(command, _)) =>
         sendText(s"Commande /$command inconnue")
         Behaviors.same
       case PDFSuccess(content, caption) =>
@@ -468,43 +463,28 @@ object ChatterBot {
       pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
       db: ActorRef[DBCommand],
       debugActor: Option[ActorRef[String]]
-  ): Behavior[Bot.PrivateMessage] =
+  ): Behavior[PerChatBotCommand] =
     Behaviors
-      .setup[ParsedMessage](
+      .setup[ChatterBotControl](
         new ChatterBot(_, client, user, pdfBuilder, db, debugActor).startingPoint
       )
-      .transformMessages { case Bot.PrivateMessage(data) => parseText(data) }
+      .transformMessages {
+        // We expand commands "/sport" and "/courses" into the generic command here
+        case PrivateCommand(command @ ("sport" | "courses"), args) =>
+          FromUser(PrivateCommand("autre", command +: args))
+        case fromUser => FromUser(fromUser)
+      }
 
-  private sealed trait ParsedMessage
-  private sealed trait FromUser extends ParsedMessage
-  private case class Command(
-      command: String,
-      args: Seq[String]
-  ) extends FromUser
-  private case class Text(text: String) extends FromUser
+  private sealed trait ChatterBotControl
+  private case class FromUser(fromUser: PerChatBotCommand)
+      extends ChatterBotControl
 
   private case class PDFSuccess(content: Array[Byte], caption: Option[String])
-      extends ParsedMessage
-  private case class PDFFailure(e: Throwable) extends ParsedMessage
+      extends ChatterBotControl
+  private case class PDFFailure(e: Throwable) extends ChatterBotControl
 
-  private case class CachedData(data: PersonalData) extends ParsedMessage
-  private case object NoCachedData extends ParsedMessage
-
-  /**
-    * Parse incoming textual message into a regular message or a command starting by '/'.
-    *
-    * @param text the incoming textual message
-    * @return a `Text` or `Command` object
-    */
-  private def parseText(
-      text: String
-  ): ParsedMessage =
-    if (text.startsWith("/")) {
-      val words = text.split(' ')
-      Command(words.head.substring(1), words.toSeq.tail)
-    } else {
-      Text(text)
-    }
+  private case class CachedData(data: PersonalData) extends ChatterBotControl
+  private case object NoCachedData extends ChatterBotControl
 
   private def parseDate(text: String): LocalDate =
     LocalDate.parse(text, DateTimeFormatter.ofPattern("d/M/y"))
