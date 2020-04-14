@@ -113,7 +113,7 @@ de la licence suivante :
 
 ## Comment lancer mon propre bot ?
 
-Vous aurez besoin d'un ordinateur avec une connectivité permanence à Telegram pour faire tourner
+Vous aurez besoin d'un ordinateur avec une connectivité permanente à Telegram pour faire tourner
 votre version du bot. Il vous faudra également créer un jeton d'authentification du bot
 auprès du [gestionnaire de robots BotFather](https://telegram.me/BotFather).
 
