@@ -1,5 +1,5 @@
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, Behavior, ChildFailed, Terminated}
 import com.bot4s.telegram.future.Polling
 
 import scala.concurrent.duration.FiniteDuration
@@ -37,15 +37,22 @@ object BotUtils {
           Behaviors
             .withTimers[WITControl[T]] { timers =>
               timers.startSingleTimer(WITTimer, WITIdleTimeout[T](), timeout)
-              Behaviors.receiveMessage {
-                case WITMessage(message) =>
-                  inner ! message
-                  timers.startSingleTimer(WITTimer, WITIdleTimeout(), timeout)
-                  Behaviors.same
-                case WITIdleTimeout() =>
-                  controller ! timeoutMessage
-                  Behaviors.same
-              }
+              Behaviors
+                .receiveMessage[WITControl[T]] {
+                  case WITMessage(message) =>
+                    inner ! message
+                    timers.startSingleTimer(WITTimer, WITIdleTimeout(), timeout)
+                    Behaviors.same
+                  case WITIdleTimeout() =>
+                    controller ! timeoutMessage
+                    Behaviors.same
+                }
+                .receiveSignal {
+                  case (_, ChildFailed(_, t)) =>
+                    throw t
+                  case (_, Terminated(_)) =>
+                    Behaviors.stopped
+                }
             }
             .narrow[WITMessage[T]]
         }
