@@ -69,7 +69,7 @@ private class Bot(
     case InitiateGlobalShutdown =>
       shutdown()
       chatters.values.foreach(
-        _ ! AnnounceShutdown("d'un redémarrage du serveur")
+        _ ! AnnounceShutdown("d'une mise à jour du bot ou du serveur")
       )
       debugActor.foreach(_ ! "Shutting down")
       waitForChattersTermination()
