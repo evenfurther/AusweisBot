@@ -239,7 +239,9 @@ private class ChatterBot(
                 "Vous avez saisi les informations suivantes :\n" + formatData(
                   user,
                   data
-                ) + "\nUtilisez /start en cas d'erreur."
+                ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir "
+                  + "utiliser les commandes pour générer des attestations. Envoyez "
+                  + "/help pour obtenir de l'aide sur les commandes disponibles."
               )
               db ! DBProtocol.Save(user.id, data)
               debugActor.foreach(
