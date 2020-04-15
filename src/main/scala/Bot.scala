@@ -60,13 +60,36 @@ private class Bot(
         }
       }
       Behaviors.same
-    case RequestChatShutdown(id) =>
+    case RequestChatShutdown(id, reason) =>
       chatters.remove(id).foreach { ref =>
         context.unwatch(ref)
-        context.stop(ref)
+        ref ! AnnounceShutdown(reason)
       }
       Behaviors.same
+    case InitiateGlobalShutdown =>
+      shutdown()
+      chatters.values.foreach(
+        _ ! AnnounceShutdown("d'un redémarrage du serveur")
+      )
+      debugActor.foreach(_ ! "Shutting down")
+      waitForChattersTermination()
   }
+
+  // Wait until we have no more individual actors alive
+  private def waitForChattersTermination(): Behavior[BotCommand] =
+    if (chatters.isEmpty) {
+      context.log.info("Global termination: ready to terminate")
+      Behaviors.stopped
+    } else {
+      context.log.info(s"Global termination: ${chatters.size} actor(s) left")
+      Behaviors.receiveMessage {
+        case RequestChatShutdown(id, _) =>
+          chatters.remove(id)
+          waitForChattersTermination()
+        case _ =>
+          Behaviors.same
+      }
+    }
 
   private[this] def findOrSpawnChatterBot(
       user: User,
@@ -74,16 +97,15 @@ private class Bot(
   ): ActorRef[PerChatBotCommand] = {
     val ref = chatters.getOrElseUpdate(
       chatId, {
-        val chatter = context.spawn(
+        val chatter = context.spawnAnonymous(
           perChatStarter(
             user,
             request,
             context.self.narrow[RequestChatShutdown],
             debugActor
-          ),
-          s"telegram-user${user.id}"
+          )
         )
-        context.watchWith(chatter, RequestChatShutdown(chatId))
+        context.watchWith(chatter, RequestChatShutdown(chatId, "termination"))
         chatter
       }
     )
@@ -126,6 +148,7 @@ object Bot {
   sealed trait BotCommand
   private case class IncomingMessage(message: Message) extends BotCommand
   private case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
+  case object InitiateGlobalShutdown extends BotCommand
 
   /**
     * The base of message received during a private conversation by the bot
@@ -149,12 +172,20 @@ object Bot {
   case class PrivateMessage(data: String) extends PerChatBotCommand
 
   /**
+    * Request that the chat bot is shut down
+    *
+    * @param reason the reason for the shut down
+    */
+  case class AnnounceShutdown(reason: String) extends PerChatBotCommand
+
+  /**
     * Request that a particular conversation actor is shutdown. The corresponding
     * actor will be stopped.
     *
     * @param chatId the user identifier
     */
-  case class RequestChatShutdown(chatId: ChatId) extends BotCommand
+  case class RequestChatShutdown(chatId: ChatId, reason: String)
+      extends BotCommand
 
   /**
     * Parse incoming textual message into a regular message or a command starting by '/'.

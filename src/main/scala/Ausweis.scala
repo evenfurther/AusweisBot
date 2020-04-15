@@ -5,12 +5,19 @@ import Bot.PerChatStarter
 import BotUtils._
 import akka.NotUsed
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, SupervisorStrategy}
+import akka.actor.typed.{
+  ActorRef,
+  ActorSystem,
+  Behavior,
+  SupervisorStrategy,
+  Terminated
+}
 import com.bot4s.telegram.api.RequestHandler
 import com.bot4s.telegram.models.{ChatId, User}
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.io.IOUtils
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
+import sun.misc.{Signal, SignalHandler}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -73,7 +80,7 @@ object Ausweis extends App {
         .withIdleTimeout(
           15.minutes,
           parent,
-          Bot.RequestChatShutdown(ChatId(user.id))
+          Bot.RequestChatShutdown(ChatId(user.id), "d'inactivité de votre part")
         )
     // During development, the debug actor can receive information when
     // data enters the database or when a certificate is sent.
@@ -95,7 +102,8 @@ object Ausweis extends App {
     }
     // Main bot. Since it might die if the connection with the Telegram servers is broken,
     // we restart it with an exponential backoff strategy in order not to hammer the servers
-    // with repeated requests.
+    // with repeated requests. In case of normal termination (for example after a global
+    // shutdown request), terminate the system as well.
     val bot = {
       val botToken = ausweisConfig.getString("telegram-token")
 
@@ -110,14 +118,24 @@ object Ausweis extends App {
         "ausweis-bot"
       )
     }
-    Behaviors.empty
+    context.watch(bot)
+
+    // Catch SIGINT and SIGTERM, and start a proper shutdown procedure that
+    // will warn users of an imminent shutdown if their unsaved personal data
+    // will be lost.
+    val signalHandler = new SignalHandler {
+      override def handle(signal: Signal): Unit =
+        bot ! Bot.InitiateGlobalShutdown
+    }
+    Signal.handle(new Signal("INT"), signalHandler)
+    Signal.handle(new Signal("TERM"), signalHandler)
+
+    Behaviors.receiveSignal {
+      case (context, Terminated(_)) =>
+        context.log.info("Main bot actor terminated, terminating ActorSystem")
+        Behaviors.stopped
+    }
   }
 
-  val system = ActorSystem(mainBehavior, "guardian")
-  if (ausweisConfig.getBoolean("interactive-stop")) {
-    println("Press [ENTER] to shutdown")
-    scala.io.StdIn.readLine()
-    println("Shutting down bot")
-    system.terminate()
-  }
+  ActorSystem(mainBehavior, "guardian")
 }

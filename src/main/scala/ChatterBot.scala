@@ -60,17 +60,25 @@ private class ChatterBot(
     outgoing ! SendText(ChatId(user.id), text, keyboard, parseMode)
 
   /**
-    * Send a file to the user. The user will be presented with the "bot is uploading a file" notification
+    * Send a PDF file to the user. The user will be presented with the "bot is uploading a file" notification
     * in Telegram.
     *
-    * @param file the file to send
+    * @param content the file content to send
     * @param caption if defined, the caption to display to the user
     */
-  private[this] def sendFile(
-      file: InputFile,
+  private[this] def sendCertificate(
+      content: Array[Byte],
       caption: Option[String] = None
-  ): Unit =
-    outgoing ! SendFile(ChatId(user.id), file, caption)
+  ): Unit = {
+    val doc = caption.getOrElse("without a title")
+    context.log.info(s"""Sent document "$doc"""")
+    debugActor.foreach(_ ! s"""Sent document "$doc"""")
+    outgoing ! SendFile(
+      ChatId(user.id),
+      InputFile("attestation.pdf", content),
+      caption
+    )
+  }
 
   // Successive data to ask the user. The content of each tuple are:
   //  - the prompt
@@ -131,26 +139,28 @@ private class ChatterBot(
           buffer.unstashAll(handleCommands(data))
         case NoCachedData =>
           buffer.unstashAll(Behaviors.receiveMessage {
-            case FromUser(PrivateCommand("start", _)) =>
+            case FromMainBot(PrivateCommand("start", _)) =>
               handleStart()
-            case FromUser(PrivateCommand("privacy", _)) =>
+            case FromMainBot(PrivateCommand("privacy", _)) =>
               privacyPolicy()
               Behaviors.same
-            case FromUser(PrivateCommand("data", _)) =>
+            case FromMainBot(PrivateCommand("data", _)) =>
               sendText(
                 s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
               )
               Behaviors.same
-            case FromUser(PrivateCommand("help", _)) =>
+            case FromMainBot(PrivateCommand("help", _)) =>
               help()
               Behaviors.same
-            case _: FromUser =>
+            case _: FromMainBot =>
               sendText("Commencez par /start")
               Behaviors.same
             case other =>
               context.log.warn(s"Received spurious $other")
               Behaviors.same
           })
+        case FromMainBot(AnnounceShutdown(_)) =>
+          Behaviors.stopped
         case other =>
           buffer.stash(other)
           Behaviors.same
@@ -187,39 +197,36 @@ private class ChatterBot(
       fieldText,
       Seq(fieldProposal(textualData)) // All proposals on one raw
     )
-    Behaviors.receiveMessage {
+    Behaviors.receiveMessage[ChatterBotControl] {
       case CachedData(_) | NoCachedData =>
-        context.log.warn(
-          s"Database result for user ${user.id} arrived too late"
-        )
+        context.log
+          .warn(s"Database result for user ${user.id} arrived too late")
         Behaviors.same
-      case FromUser(PrivateCommand("start", _)) =>
-        handleStart()
-      case FromUser(PrivateCommand("privacy", _)) =>
+      case FromMainBot(PrivateCommand("start", _)) => handleStart()
+      case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         requestData(textualData)
-      case FromUser(PrivateCommand("data", _)) =>
+      case FromMainBot(PrivateCommand("data", _)) =>
         if (textualData.isEmpty) {
           sendText(
             s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
           )
         } else {
           sendText(
-            ((s"À ce stade, je connais votre numéro unique Telegram (${user.id}), et vous avez rentré " +
-              "les informations partielles suivantes (non encore stockées dans la base de données) :") +: textualData)
+            ((s"À ce stade, je connais votre numéro unique Telegram (${user.id}), et vous avez rentré " + "les informations partielles suivantes (non encore stockées dans la base de données) :") +: textualData)
               .mkString("\n- ")
           )
         }
         requestData(textualData)
-      case FromUser(PrivateCommand("help", _)) =>
+      case FromMainBot(PrivateCommand("help", _)) =>
         help()
         requestData(textualData)
-      case FromUser(PrivateCommand(_, _)) =>
+      case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
         )
         requestData(textualData)
-      case FromUser(PrivateMessage(text)) =>
+      case FromMainBot(PrivateMessage(text)) =>
         checker(text) match {
           case Some(errorMsg) =>
             sendText(errorMsg)
@@ -239,9 +246,7 @@ private class ChatterBot(
                 "Vous avez saisi les informations suivantes :\n" + formatData(
                   user,
                   data
-                ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir "
-                  + "utiliser les commandes pour générer des attestations. Envoyez "
-                  + "/help pour obtenir de l'aide sur les commandes disponibles."
+                ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir " + "utiliser les commandes pour générer des attestations. Envoyez " + "/help pour obtenir de l'aide sur les commandes disponibles."
               )
               db ! DBProtocol.Save(user.id, data)
               debugActor.foreach(
@@ -252,9 +257,35 @@ private class ChatterBot(
               requestData(textualData :+ text)
             }
         }
-      case msg =>
-        context.log.warn(s"Unexpected message: $msg")
+      case FromMainBot(AnnounceShutdown(reason)) =>
+        val msg = if (textualData.isEmpty) {
+          s"Cette conversation est momentanément stoppée en raison $reason. Vous pouvez la reprendre " +
+            s"à tout moment en utilisant la commande /start."
+        } else {
+          s"En raison $reason la collecte de données est interrompue et les données transmises jusqu'à " +
+            "présent ne seront pas sauvegardées. Vous pouvez recommencer la collecte à tout moment en utilisant " +
+            "la commande /start."
+        }
+        sendText(msg)
+        // Wait for 100 milliseconds before stopping
+        Behaviors
+          .withTimers[Any] { timers =>
+            val Stop = new Object
+            timers.startSingleTimer(Stop, 100.milliseconds)
+            Behaviors.receiveMessage {
+              case Stop => Behaviors.stopped
+              case msg =>
+                context.log.warn(
+                  s"Spurious message received during shutdown: $msg"
+                )
+                Behaviors.same
+            }
+          }
+          .narrow
+      case PDFSuccess(content, caption) =>
+        sendCertificate(content, caption)
         Behaviors.same
+      case PDFFailure(_) => Behaviors.same
     }
   }
 
@@ -286,24 +317,24 @@ private class ChatterBot(
           s"Database result for user ${user.id} arrived too late"
         )
         Behaviors.same
-      case FromUser(PrivateMessage(_)) =>
+      case FromMainBot(PrivateMessage(_)) =>
         sendText(
           "J'ai déjà toutes les informations utiles, essayez /help pour voir les commandes disponibles"
         )
         offerCommands(data)
-      case FromUser(PrivateCommand("start", _)) =>
+      case FromMainBot(PrivateCommand("start", _)) =>
         db ! DBProtocol.Delete(user.id)
         sendText(
           "Toutes vos données personnelles ont été définitivement supprimées de la base de donnée"
         )
         handleStart()
-      case FromUser(PrivateCommand("privacy", _)) =>
+      case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         Behaviors.same
-      case FromUser(PrivateCommand("help", _)) =>
+      case FromMainBot(PrivateCommand("help", _)) =>
         help()
         Behaviors.same
-      case FromUser(PrivateCommand("data", _)) =>
+      case FromMainBot(PrivateCommand("data", _)) =>
         sendText(
           s"Je dispose des données personnelles suivantes :\n" + formatData(
             user,
@@ -311,27 +342,26 @@ private class ChatterBot(
           )
         )
         Behaviors.same
-      case FromUser(PrivateCommand("autre", Seq())) =>
+      case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
-      case FromUser(PrivateCommand("autre", args)) =>
+      case FromMainBot(PrivateCommand("autre", args)) =>
         handlePDFRequest(data, args.head.split("""[;,+-]""").toSeq, args.tail)
         Behaviors.same
-      case FromUser(PrivateCommand("vierge", _)) =>
+      case FromMainBot(PrivateCommand("vierge", _)) =>
         handleEmptyPDFRequest(data)
         Behaviors.same
-      case FromUser(PrivateCommand(command, _)) =>
+      case FromMainBot(PrivateCommand(command, _)) =>
         sendText(s"Commande /$command inconnue")
         Behaviors.same
+      case FromMainBot(AnnounceShutdown(_)) =>
+        Behaviors.stopped
       case PDFSuccess(content, caption) =>
-        sendFile(InputFile("attestation.pdf", content), caption)
-        val doc = caption.getOrElse("without a title")
-        context.log.info(s"""Sent document "$doc"""")
-        debugActor.foreach(_ ! s"""Sent document "$doc"""")
+        sendCertificate(content, caption)
         offerCommands(data)
       case PDFFailure(e) =>
         sendText(
-          s"Erreur interne lors de la génération du PDF, reessayez plus tard: $e"
+          s"Erreur interne lors de la génération du PDF, réessayez plus tard: $e"
         )
         offerCommands(data)
     }
@@ -469,12 +499,12 @@ object ChatterBot {
       .transformMessages {
         // We expand commands "/sport" and "/courses" into the generic command here
         case PrivateCommand(command @ ("sport" | "courses"), args) =>
-          FromUser(PrivateCommand("autre", command +: args))
-        case fromUser => FromUser(fromUser)
+          FromMainBot(PrivateCommand("autre", command +: args))
+        case fromMainBot => FromMainBot(fromMainBot)
       }
 
   private sealed trait ChatterBotControl
-  private case class FromUser(fromUser: PerChatBotCommand)
+  private case class FromMainBot(fromMainBot: PerChatBotCommand)
       extends ChatterBotControl
 
   private case class PDFSuccess(content: Array[Byte], caption: Option[String])
