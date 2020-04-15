@@ -325,13 +325,9 @@ private class ChatterBot(
         Behaviors.same
       case PDFSuccess(content, caption) =>
         sendFile(InputFile("attestation.pdf", content), caption)
-        context.log.info(
-          s"""Document "${caption
-            .getOrElse("<no title>")}" generated for ${data.firstName} ${data.lastName}"""
-        )
-        debugActor.foreach(_ ! s"""Sending document "${caption.getOrElse(
-          "<no title>"
-        )}" to ${data.firstName} ${data.lastName}""")
+        val doc = caption.getOrElse("without a title")
+        context.log.info(s"""Sent document "$doc"""")
+        debugActor.foreach(_ ! s"""Sent document "$doc"""")
         offerCommands(data)
       case PDFFailure(e) =>
         sendText(
@@ -362,7 +358,7 @@ private class ChatterBot(
     * @param data the user data
     */
   private[this] def handleEmptyPDFRequest(data: PersonalData): Unit = {
-    val caption = "Attestation pré-remplie à imprimer"
+    val caption = s"Attestation pré-remplie à imprimer pour ${data.fullName}"
     implicit val timeout: Timeout = 10.seconds
     context.ask[BuildPDF, Array[Byte]](
       pdfBuilder,
@@ -419,7 +415,7 @@ private class ChatterBot(
         }
         val day = outputDateTime.getDayOfWeek.toFrenchDay
         val caption =
-          s"Sortie ${validReasons.mkString("+")} $day à ${utils.timeText(outputDateTime)}"
+          s"Sortie ${validReasons.mkString("+")} $day à ${utils.timeText(outputDateTime)} pour ${data.fullName}"
         implicit val timeout: Timeout = 10.seconds
         context.ask[BuildPDF, Array[Byte]](
           pdfBuilder,
