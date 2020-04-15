@@ -34,4 +34,4 @@ for db in _global_changes _replicator _users ausweis; do
   curl -X PUT http://db:5984/$db > /dev/null 2>&1
 done
 
-java -jar ausweis.jar docker.conf
+exec java -jar ausweis.jar docker.conf

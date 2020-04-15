@@ -9,5 +9,5 @@ RUN cd /workspace && sbt assembly
 FROM openjdk:15-jdk-oracle
 COPY --from=0 /workspace/ausweis.jar .
 ADD start-with-env.sh ./
-CMD ./start-with-env.sh
+CMD ["./start-with-env.sh"]
 ENV TZ=Europe/Paris
