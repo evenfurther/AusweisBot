@@ -62,10 +62,8 @@ object QRCode {
   ): QRCode = {
     import utils._
     val reasons =
-      auth.reasons
-        .flatMap(Authorization.reasons.get)
-        .sortBy { case (_, _, y) => -y }
-        .map(_._1)
+      Authorization
+        .orderedCanonicalValidReasons(auth.reasons)
         .mkString("-")
     val text = s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)}
                   |Nom: ${data.lastName}

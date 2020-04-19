@@ -32,4 +32,32 @@ object Authorization {
     }.toMap
   }
 
+  /**
+    * Make valid reasons unique (for example "sport" and "promenade" are the same reason)
+    * by only keeping the first one of a kind.
+    *
+    * @param rs the sequence of reasons, with possible duplicates
+    * @return a sequence of reasons without duplicates
+    */
+  def unifyValidReasons(rs: Seq[String]): Seq[String] = {
+    rs.foldLeft((Seq[String](), Set[String]())) {
+        case ((result, done), reason) =>
+          val canonical = reasons(reason)._1
+          if (done.contains(canonical)) { (result, done) }
+          else { (result :+ reason, done + canonical) }
+      }
+      ._1
+  }
+
+  /**
+    * Return a sequence of canonical names for reasons ordered by their y coordinates.
+    * @param rs the sequence of reasons, without duplicates
+    * @return the ordered list of canonical reasons
+    */
+  def orderedCanonicalValidReasons(rs: Seq[String]): Seq[String] = {
+    rs.flatMap(reasons.get)
+      .sortBy { case (_, _, y) => -y }
+      .map(_._1)
+  }
+
 }

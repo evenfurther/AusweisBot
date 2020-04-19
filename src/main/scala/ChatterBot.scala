@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 
 import Bot._
 import PDFBuilder.BuildPDF
-import TelegramSender.{SendFile, SendText}
+import TelegramSender.{SendFile, SendText, TelegramOutgoingData}
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 // and start again at the first step.
 private class ChatterBot(
     context: ActorContext[ChatterBot.ChatterBotControl],
-    client: RequestHandler[Future],
+    outgoing: ActorRef[TelegramOutgoingData],
     user: User,
     pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
     db: ActorRef[DBCommand],
@@ -40,11 +40,6 @@ private class ChatterBot(
   private[this] implicit val ec: ExecutionContextExecutor =
     context.executionContext
   private[this] implicit val timeout: Timeout = 5.seconds
-
-  // Actor in charge of sending ordered outgoing messages to the peer we are in conversation
-  // with. We establish a death pact with this actor so that we die if it crashes.
-  private[this] val outgoing = context.spawn(TelegramSender(client), "sender")
-  context.watch(outgoing)
 
   /**
     * Send a message to the user.
@@ -132,7 +127,7 @@ private class ChatterBot(
     * common commands such as `/help`, `/privacy` or `/data` until the user enters
     * `/start` to start data collection in which case we branch to `requestData`.
     */
-  private val startingPoint: Behavior[ChatterBotControl] = {
+  val startingPoint: Behavior[ChatterBotControl] = {
     Behaviors.withStash[ChatterBotControl](5) { buffer =>
       Behaviors.receiveMessage {
         case CachedData(data) =>
@@ -380,7 +375,10 @@ private class ChatterBot(
     )
 
   private[this] def sendButtonsText(): Unit =
-    sendText("Choisissez un certificat à générer (utilisez /help pour l'aide)", defaultButtons)
+    sendText(
+      "Choisissez un certificat à générer (utilisez /help pour l'aide)",
+      defaultButtons
+    )
 
   /**
     * Send an empty certificate to print and fill by hand.
@@ -417,7 +415,7 @@ private class ChatterBot(
   ): Unit = {
     val (validReasons, invalidReasons) = {
       val (v, i) = reasons.partition(Authorization.reasons.contains)
-      (v.toSet.toSeq, i.toSet.toSeq)
+      (Authorization.unifyValidReasons(v), i.toSet.toSeq)
     }
     if (invalidReasons.nonEmpty) {
       val next = if (validReasons.isEmpty) {
@@ -493,9 +491,14 @@ object ChatterBot {
       debugActor: Option[ActorRef[String]]
   ): Behavior[PerChatBotCommand] =
     Behaviors
-      .setup[ChatterBotControl](
-        new ChatterBot(_, client, user, pdfBuilder, db, debugActor).startingPoint
-      )
+      .setup[ChatterBotControl] { context =>
+        // Actor in charge of sending ordered outgoing messages to the peer we are in conversation
+        // with. We establish a death pact with this actor so that we die if it crashes because
+        // the whole logic is off if the user misses a message.
+        val outgoing = context.spawn(TelegramSender(client), "sender")
+        context.watch(outgoing)
+        new ChatterBot(context, outgoing, user, pdfBuilder, db, debugActor).startingPoint
+      }
       .transformMessages {
         // We expand commands "/sport" and "/courses" into the generic command here
         case PrivateCommand(command @ ("sport" | "courses"), args) =>
@@ -503,8 +506,8 @@ object ChatterBot {
         case fromMainBot => FromMainBot(fromMainBot)
       }
 
-  private sealed trait ChatterBotControl
-  private case class FromMainBot(fromMainBot: PerChatBotCommand)
+  sealed trait ChatterBotControl
+  case class FromMainBot(fromMainBot: PerChatBotCommand)
       extends ChatterBotControl
 
   private case class PDFSuccess(content: Array[Byte], caption: Option[String])
@@ -633,7 +636,7 @@ object ChatterBot {
   /**
     * Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
     */
-  private implicit class FrenchDayOfWeek(dow: DayOfWeek) {
+  implicit class FrenchDayOfWeek(dow: DayOfWeek) {
     val toFrenchDay: String = dow match {
       case DayOfWeek.MONDAY    => "lundi"
       case DayOfWeek.TUESDAY   => "mardi"
