@@ -12,6 +12,7 @@ import com.bot4s.telegram.models._
 
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 private class Bot(
@@ -72,7 +73,16 @@ private class Bot(
         _ ! AnnounceShutdown("d'une mise à jour du bot ou du serveur")
       )
       debugActor.foreach(_ ! "Shutting down")
-      waitForChattersTermination()
+      // Wait for some time before starting termination in order to let
+      // the debug message get through. Reuse the same message.
+      Behaviors.withTimers { timers =>
+        timers.startSingleTimer(InitiateGlobalShutdown, 100.milliseconds)
+        Behaviors
+          .receiveMessage {
+            case InitiateGlobalShutdown => waitForChattersTermination()
+            case _                      => Behaviors.same
+          }
+      }
   }
 
   // Wait until we have no more individual actors alive
