@@ -72,7 +72,9 @@ private class Bot(
       chatters.values.foreach(
         _ ! AnnounceShutdown("d'une mise à jour du bot ou du serveur")
       )
-      debugActor.foreach(_ ! "Shutting down")
+      debugActor.foreach(
+        _ ! s"Shutting down (active sessions: ${chatters.size})"
+      )
       // Wait for some time before starting termination in order to let
       // the debug message get through. Reuse the same message.
       Behaviors.withTimers { timers =>
