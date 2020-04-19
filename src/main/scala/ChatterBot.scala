@@ -380,7 +380,7 @@ private class ChatterBot(
     )
 
   private[this] def sendButtonsText(): Unit =
-    sendText("Choisissez un certificat à générer", defaultButtons)
+    sendText("Choisissez un certificat à générer (utilisez /help pour l'aide)", defaultButtons)
 
   /**
     * Send an empty certificate to print and fill by hand.
