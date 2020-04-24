@@ -1,9 +1,11 @@
 # Présentation générale
 
-AusweisBot est un logiciel libre permettant de générer une attestation
-dérogatoire de déplacement à travers le réseau de communication
-[Telegram](https://telegram.org). Une instance publique, utilisable par tous,
-est disponible sur Telegram sous le nom [@AusweisBot](https://telegram.me/AusweisBot).
+AusweisBot est un logiciel libre permettant de générer
+pendant la pandémie de covid-19 une attestation dérogatoire de
+déplacement en France à travers le réseau de communication
+[Telegram](https://telegram.org). Une instance publique,
+utilisable par tous, est disponible sur Telegram sous le nom
+[@AusweisBot](https://telegram.me/AusweisBot).
 
 [__Accéder à l'instance publique @AusweisBot en cliquant ici__](https://telegram.me/AusweisBot)
 
@@ -65,7 +67,7 @@ Non, AusweisBot permet simplement de générer les attestations dérogatoires de
 tel que vous le feriez avec l'attestation papier ou le générateur d'attestation mis à disposition
 par le ministère de l'intérieur. __Restez chez vous !__
 
-__Puis-je déployer mon propre bot à partir du source de AusweisBot sur Telegram ?__
+__Puis-je déployer mon propre bot à partir du code source de AusweisBot sur Telegram ?__
 
 Bien entendu, du moment que vous respectez les termes des licenses des logiciels
 et données utilisés (cf. ci-dessous). De plus, vous devez vous assurer que les informations
