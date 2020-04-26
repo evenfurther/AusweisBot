@@ -1,5 +1,5 @@
 import java.time._
-import java.time.format.DateTimeFormatter
+import java.time.format.{DateTimeFormatter, ResolverStyle}
 
 import Bot._
 import PDFBuilder.BuildPDF
@@ -231,7 +231,7 @@ private class ChatterBot(
               val data = PersonalData(
                 textualData(1),
                 textualData.head,
-                parseDate(textualData(2)),
+                parseBirthDate(textualData(2)),
                 textualData(3),
                 textualData(4),
                 textualData(5),
@@ -517,8 +517,28 @@ object ChatterBot {
   private case class CachedData(data: PersonalData) extends ChatterBotControl
   private case object NoCachedData extends ChatterBotControl
 
-  private def parseDate(text: String): LocalDate =
-    LocalDate.parse(text, DateTimeFormatter.ofPattern("d/M/y"))
+  /**
+    * Parse a textual date and return a plausible one. Any year in [0, 20] will
+    * be added 2000 to it, and any year in [21, 99] will be added 1900 to it.
+    * Of course it is best to supply the full year.
+    * @param text the date to parse
+    * @return a plausible date
+    */
+  def parseBirthDate(text: String): LocalDate = {
+    val date = LocalDate.parse(
+      text,
+      DateTimeFormatter
+        .ofPattern("d/M/u")
+        .withResolverStyle(ResolverStyle.STRICT)
+    )
+    if (date.getYear <= 20) {
+      date.plusYears(2000)
+    } else if (date.getYear <= 100) {
+      date.plusYears(1900)
+    } else {
+      date
+    }
+  }
 
   /**
     * Check that a birth date is at the right format.
@@ -526,9 +546,20 @@ object ChatterBot {
     * @param text the birth date
     * @return the error message to display if the date is invalid
     */
-  private def checkBirthDate(text: String): Option[String] = {
-    Try(parseDate(text)) match {
-      case Success(_) => None
+  def checkBirthDate(text: String): Option[String] = {
+    Try(parseBirthDate(text)) match {
+      case Success(date) =>
+        if (date.isAfter(LocalDate.now())) {
+          Some(
+            "Je doute que vous soyez né(e) dans le futur, merci de saisir une date plausible"
+          )
+        } else if (date.isBefore(LocalDate.now().minusYears(110))) {
+          Some(
+            "À plus de 110 ans il n'est pas prudent de sortir, merci de saisir une date plausible"
+          )
+        } else {
+          None
+        }
       case Failure(_) =>
         Some("Date non reconnue, veuillez la ressaisir au format attendu")
     }

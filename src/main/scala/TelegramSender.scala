@@ -33,13 +33,20 @@ private class TelegramSender(
       }
       context.pipeToSelf(
         client(
-          SendMessage(chatId, text, replyMarkup = keys, parseMode = parseMode)
+          SendMessage(
+            chatId,
+            text,
+            replyMarkup = keys,
+            parseMode = parseMode
+          )
         ).map(_ => ())
       )(res => Sent(res))
       waitForConfirmation
     case SendFile(chatId, file, caption) =>
       val sent =
-        for (_ <- client(SendChatAction(chatId, ChatAction.UploadDocument));
+        for (_ <- client(
+               SendChatAction(chatId, ChatAction.UploadDocument)
+             );
              _ <- client(SendDocument(chatId, file, caption = caption)))
           yield ()
       context.pipeToSelf(sent)(Sent)

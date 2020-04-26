@@ -80,7 +80,7 @@ object Ausweis extends App {
         .withIdleTimeout(
           15.minutes,
           parent,
-          Bot.RequestChatShutdown(ChatId(user.id), "d'inactivité de votre part")
+          Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")
         )
     // During development, the debug actor can receive information when
     // data enters the database or when a certificate is sent.

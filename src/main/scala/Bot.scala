@@ -32,7 +32,7 @@ private class Bot(
   private[this] implicit val system: ActorSystem = context.system.toClassic
   override val client: RequestHandler[Future] = new AkkaHttpClient(token)
 
-  private[this] val chatters: mutable.Map[ChatId, ActorRef[PerChatBotCommand]] =
+  private[this] val chatters: mutable.Map[Int, ActorRef[PerChatBotCommand]] =
     mutable.Map()
 
   debugActor.foreach(_ ! "Starting")
@@ -56,8 +56,7 @@ private class Bot(
     case IncomingMessage(message) =>
       message.text.foreach { text =>
         message.from.foreach { user =>
-          val chatId = ChatId(user.id)
-          findOrSpawnChatterBot(user, chatId) ! parseText(text)
+          findOrSpawnChatterBot(user) ! parseText(text)
         }
       }
       Behaviors.same
@@ -104,11 +103,10 @@ private class Bot(
     }
 
   private[this] def findOrSpawnChatterBot(
-      user: User,
-      chatId: ChatId
+      user: User
   ): ActorRef[PerChatBotCommand] = {
     val ref = chatters.getOrElseUpdate(
-      chatId, {
+      user.id, {
         val chatter = context.spawnAnonymous(
           perChatStarter(
             user,
@@ -117,7 +115,7 @@ private class Bot(
             debugActor
           )
         )
-        context.watchWith(chatter, RequestChatShutdown(chatId, "termination"))
+        context.watchWith(chatter, RequestChatShutdown(user.id, "termination"))
         chatter
       }
     )
@@ -194,10 +192,9 @@ object Bot {
     * Request that a particular conversation actor is shutdown. The corresponding
     * actor will be stopped.
     *
-    * @param chatId the user identifier
+    * @param userId the user identifier
     */
-  case class RequestChatShutdown(chatId: ChatId, reason: String)
-      extends BotCommand
+  case class RequestChatShutdown(userId: Int, reason: String) extends BotCommand
 
   /**
     * Parse incoming textual message into a regular message or a command starting by '/'.
