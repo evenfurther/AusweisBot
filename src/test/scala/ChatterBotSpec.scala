@@ -130,7 +130,7 @@ class ChatterBotSpec extends Specification {
         "plusieurs motifs simultanément"
       )
       val documentTitle =
-        s"Sortie santé+promenade ${day.toFrenchDay} à ${hour}h30 pour John Doe"
+        f"Sortie santé+promenade ${day.toFrenchDay}%s à ${hour}%02dh30 pour John Doe"
       outgoing.expectMessageType[SendFile] match {
         case SendFile(
             chatId: ChatId,
