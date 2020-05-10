@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 import Bot.PerChatStarter
 import BotUtils._
 import akka.NotUsed
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{
   ActorRef,
   ActorSystem,
@@ -45,8 +45,75 @@ object Ausweis extends App {
       .replaceAll("CONTACT-EMAIL", ausweisConfig.getString("contact-email"))
   )
 
-  // Main actor guardian, with no command
+  // Main actor behavior, with no command
   val mainBehavior: Behavior[NotUsed] = Behaviors.setup { context =>
+    // During development, the debug actor can receive information when
+    // data enters the database or when a certificate is sent.
+    val debugActor = if (ausweisConfig.hasPath("debug")) {
+      val ref = context.spawn(
+        Behaviors
+          .supervise(
+            DebugBot(
+              ausweisConfig.getString("debug.telegram-token"),
+              ChatId(ausweisConfig.getInt("debug.chat-id"))
+            )
+          )
+          .onFailure[Throwable](SupervisorStrategy.restart),
+        "debug"
+      )
+      Some(ref)
+    } else {
+      None
+    }
+
+    val botToken = ausweisConfig.getString("telegram-token")
+
+    val botBehavior = if (ausweisConfig.getBoolean("disabled")) {
+      DisabledBot(botToken, debugActor)
+    } else {
+      fullFeaturedBehavior(context, botToken, debugActor)
+    }
+
+    // Since the bot  might die if the connection with the Telegram servers is broken,
+    // we restart it with an exponential backoff strategy in order not to hammer the servers
+    // with repeated requests. In case of normal termination (for example after a global
+    // shutdown request), terminate the system as well.
+    val bot = context.spawn(
+      Behaviors
+        .supervise(botBehavior)
+        .onFailure[Throwable](
+          SupervisorStrategy
+            .restartWithBackoff(5.seconds, 30.seconds, 0.2)
+            .withResetBackoffAfter(5.minutes)
+        ),
+      "ausweis-bot"
+    )
+    context.watch(bot)
+
+    // Catch SIGINT and SIGTERM, and start a proper shutdown procedure that
+    // will warn users of an imminent shutdown if their unsaved personal data
+    // will be lost.
+    val signalHandler = new SignalHandler {
+      override def handle(signal: Signal): Unit =
+        bot ! Bot.InitiateGlobalShutdown
+    }
+    Signal.handle(new Signal("INT"), signalHandler)
+    Signal.handle(new Signal("TERM"), signalHandler)
+
+    Behaviors.receiveSignal {
+      case (context, Terminated(_)) =>
+        context.log.info("Main bot actor terminated, terminating ActorSystem")
+        Behaviors.stopped
+    }
+  }
+
+  ActorSystem(mainBehavior, "guardian")
+
+  private def fullFeaturedBehavior(
+      context: ActorContext[NotUsed],
+      botToken: String,
+      debugActor: Option[ActorRef[String]]
+  ) = {
     // PDF builder actor
     val pdfBuilder = {
       val certificate = IOUtils.resourceToByteArray("/certificate.84dda806.pdf")
@@ -81,61 +148,7 @@ object Ausweis extends App {
           15.minutes,
           parent,
           Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")
-        )
-    // During development, the debug actor can receive information when
-    // data enters the database or when a certificate is sent.
-    val debugActor = if (ausweisConfig.hasPath("debug")) {
-      val ref = context.spawn(
-        Behaviors
-          .supervise(
-            DebugBot(
-              ausweisConfig.getString("debug.telegram-token"),
-              ChatId(ausweisConfig.getInt("debug.chat-id"))
-            )
-          )
-          .onFailure[Throwable](SupervisorStrategy.restart),
-        "debug-bot"
-      )
-      Some(ref)
-    } else {
-      None
-    }
-    // Main bot. Since it might die if the connection with the Telegram servers is broken,
-    // we restart it with an exponential backoff strategy in order not to hammer the servers
-    // with repeated requests. In case of normal termination (for example after a global
-    // shutdown request), terminate the system as well.
-    val bot = {
-      val botToken = ausweisConfig.getString("telegram-token")
-
-      context.spawn(
-        Behaviors
-          .supervise(Bot(botToken, perChatStarter, debugActor))
-          .onFailure[Throwable](
-            SupervisorStrategy
-              .restartWithBackoff(5.seconds, 30.seconds, 0.2)
-              .withResetBackoffAfter(5.minutes)
-          ),
-        "ausweis-bot"
-      )
-    }
-    context.watch(bot)
-
-    // Catch SIGINT and SIGTERM, and start a proper shutdown procedure that
-    // will warn users of an imminent shutdown if their unsaved personal data
-    // will be lost.
-    val signalHandler = new SignalHandler {
-      override def handle(signal: Signal): Unit =
-        bot ! Bot.InitiateGlobalShutdown
-    }
-    Signal.handle(new Signal("INT"), signalHandler)
-    Signal.handle(new Signal("TERM"), signalHandler)
-
-    Behaviors.receiveSignal {
-      case (context, Terminated(_)) =>
-        context.log.info("Main bot actor terminated, terminating ActorSystem")
-        Behaviors.stopped
-    }
+        ) // Main bot.
+    Bot(botToken, perChatStarter, debugActor)
   }
-
-  ActorSystem(mainBehavior, "guardian")
 }

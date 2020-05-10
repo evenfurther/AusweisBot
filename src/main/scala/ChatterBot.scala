@@ -128,7 +128,7 @@ private class ChatterBot(
     * `/start` to start data collection in which case we branch to `requestData`.
     */
   val startingPoint: Behavior[ChatterBotControl] = {
-    Behaviors.withStash[ChatterBotControl](5) { buffer =>
+    Behaviors.withStash[ChatterBotControl](10) { buffer =>
       Behaviors.receiveMessage {
         case CachedData(data) =>
           buffer.unstashAll(handleCommands(data))

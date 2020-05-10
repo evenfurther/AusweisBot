@@ -13,7 +13,7 @@ services:
       - "ivy2:/root/.ivy2"
   db:
     image: couchdb:2.3.0
-    restart: always
+    restart: unless-stopped
     volumes:
       - "./couchdb-volume:/opt/couchdb/data"
 
