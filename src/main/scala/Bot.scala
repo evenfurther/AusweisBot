@@ -156,8 +156,8 @@ object Bot {
     Behaviors.setup(new Bot(_, token, perChatStarter, debugActor))
 
   sealed trait BotCommand
-  private case class IncomingMessage(message: Message) extends BotCommand
-  private case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
+  case class IncomingMessage(message: Message) extends BotCommand
+  case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
   case object InitiateGlobalShutdown extends BotCommand
 
   /**
