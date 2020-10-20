@@ -97,7 +97,7 @@ private class ChatterBot(
     ),
     ("Entrez votre ville de naissance", _ => None, _ => Seq()),
     (
-      "Entrez votre adresse de confinement sans le code postal ni la ville",
+      "Entrez votre adresse de résidence sans le code postal ni la ville",
       _ => None,
       _ => Seq()
     ),
@@ -640,7 +640,7 @@ object ChatterBot {
   private def formatData(user: User, data: PersonalData): String =
     s"""- État-civil : ${data.firstName} ${data.lastName}
        |- Né(e) : le ${data.birthDateText} à ${data.birthPlace}
-       |- Adresse de confinement : ${data.street} ${data.zip} ${data.city}
+       |- Adresse de résidence : ${data.street} ${data.zip} ${data.city}
        |- Numéro unique Telegram : ${user.id}
        |""".stripMargin
 
