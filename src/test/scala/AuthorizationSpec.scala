@@ -3,43 +3,20 @@ import org.specs2.mutable._
 
 class AuthorizationSpec extends Specification {
 
-  "unifyValidReasons" should {
-    "remove the duplicates by keeping the first one only" in {
-      Authorization.unifyValidReasons(Seq("sport", "famille", "promenade")) must be equalTo (Seq(
-        "sport",
-        "famille"
-      ))
-      Authorization.unifyValidReasons(Seq("promenade", "famille", "sport")) must be equalTo (Seq(
-        "promenade",
-        "famille"
-      ))
-    }
-
-    "throw an exception on invalid reasons" in {
-      Authorization.unifyValidReasons(Seq("invalid")) must throwA[
-        RuntimeException
-      ]
+  "canonical" should {
+    "work as expected" in {
+      Authorization.canonical("formation") must be equalTo (Some("travail"))
+      Authorization.canonical("animal") must be equalTo (Some("animaux"))
+      Authorization.canonical("famille") must be equalTo (Some("famille"))
+      Authorization.canonical("sieste") must be equalTo (None)
     }
   }
 
-  "orderedCanonicalValidReasons" should {
+  "valid" should {
     "work as expected" in {
-      Authorization.orderedCanonicalValidReasons(
-        Seq("santé", "promenade", "famille", "travail")
-      ) must be equalTo (Seq(
-        "travail",
-        "sante",
-        "famille",
-        "sport"
-      ))
-      Authorization.orderedCanonicalValidReasons(
-        Seq("famille", "santé", "promenade", "travail")
-      ) must be equalTo (Seq(
-        "travail",
-        "sante",
-        "famille",
-        "sport"
-      ))
+      Authorization.valid("formation") must beTrue
+      Authorization.valid("travail") must beTrue
+      Authorization.valid("sieste") must beFalse
     }
   }
 
