@@ -39,51 +39,33 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
       )
       addText(
         content,
-        123,
-        686,
+        119,
+        669,
         s"${data.firstName} ${data.lastName}",
         arial,
         11
       )
-      addText(content, 123, 661, data.birthDateText, arial, 11)
-      addText(content, 92, 638, data.birthPlace, arial, 11)
+      addText(content, 119, 646, data.birthDateText, arial, 11)
+      addText(content, 312, 646, data.birthPlace, arial, 11)
       addText(
         content,
-        134,
-        613,
-        s"${data.street} ${data.zip} ${data.city}",
+        133,
+        622,
+        data.street,
         arial,
         11
       )
-      addText(content, 111, 226, data.city, arial, 11)
+      addText(content, 133, 609, s"${data.zip} ${data.city}", arial, 11)
+      addText(content, 105, 168, data.city, arial, 11)
       auth.foreach { auth =>
-        addText(content, 92, 200, dateText(auth.output), arial, 11)
-        addText(content, 200, 201, hourText(auth.output), arial, 11)
-        addText(content, 220, 201, minuteText(auth.output), arial, 11)
-        addText(
-          content,
-          464,
-          150,
-          "Date de création:",
-          PDType1Font.HELVETICA,
-          7
-        )
-        addText(
-          content,
-          455,
-          144,
-          s"${dateText(auth.made)} à ${timeText(auth.made)}",
-          PDType1Font.HELVETICA,
-          7
-        )
-        auth.reasons.foreach { reason =>
-          Authorization.reasons.get(reason).foreach {
-            case (_, x, y) =>
-              addText(content, x, y, "x", PDType1Font.HELVETICA, 19)
-          }
+        addText(content, 91, 146, dateText(auth.output), arial, 11)
+        addText(content, 312, 146, timeText(auth.output), arial, 11)
+        Authorization.coordinates(auth.reason).foreach {
+          case (x, y) =>
+            addText(content, x, y, "x", PDType1Font.HELVETICA, 18)
         }
       }
-      qrCodeImg.foreach(content.drawImage(_, 424.72f, 155, 100, 100))
+      qrCodeImg.foreach(content.drawImage(_, 424.72f, 122f, 92, 92))
 
       // Add a "Signature" field if the form is not fully filled and requires manual filling
       // and signing. Note that this is not the exact font used in the original paper certificate
@@ -105,7 +87,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
         true,
         true
       )
-      content.drawImage(qrCodeImg, 50, 491.88998f, 300, 300)
+      content.drawImage(qrCodeImg, 50f, 491.88998f, 300, 300)
       content.close()
     }
 

@@ -76,9 +76,7 @@ permettant de vous contacter sont à jour.
 __Que pensez-vous du principe de cette attestation dérogatoire de déplacement ?__
 
 Peu importe ce que j'en pense, la présentation d'un document attestant d'une raison valable
-de sortie est rendue obligatoire par l'article 3 du
-[décret n° 2020-293 du 23 mars 2020](https://www.legifrance.gouv.fr/affichTexte.do?cidTexte=JORFTEXT000041746694).
-Pour limiter les contacts lors du contrôle, il me semble plus simple de présenter une attestation
+de sortie est rendue obligatoire par le réglement. Pour limiter les contacts lors du contrôle, il me semble plus simple de présenter une attestation
 identique à ce que propose le service en ligne du ministère de l'intérieur en y incluant
 un QR-code incorporant le même contenu.
 
@@ -100,7 +98,7 @@ jamais été adaptée pour Scala 2.13.
 AusweisBot est distribué sous les termes de la licence [GNU Affero
 Public License version 3.0](https://www.gnu.org/licenses/agpl-3.0.html).
 
-Pour faciliter la saisie du lieu de confinement, ce logiciel utilise une
+Pour faciliter la saisie du lieu de résidence, ce logiciel utilise une
 liste des communes de France et de leurs codes postaux qui s'accompagne
 de la licence suivante :
 
