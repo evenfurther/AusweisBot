@@ -19,7 +19,7 @@ case class PersonalData(
     * The birth text as formatted on the official form (without leading 0)
     */
   val birthDateText: String =
-    birthDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    birthDate.format(DateTimeFormatter.ofPattern("d/M/yyyy"))
 
   /**
     * A textual representation of the full name

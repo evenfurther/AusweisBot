@@ -7,6 +7,12 @@ object utils {
     date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
   def timeText(date: LocalDateTime): String =
-    date.format(DateTimeFormatter.ofPattern("HH':'mm"))
+    date.format(DateTimeFormatter.ofPattern("HH'h'mm"))
+
+  def hourText(date: LocalDateTime): String =
+    date.format(DateTimeFormatter.ofPattern("HH"))
+
+  def minuteText(date: LocalDateTime): String =
+    date.format(DateTimeFormatter.ofPattern("mm"))
 
 }

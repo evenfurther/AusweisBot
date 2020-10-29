@@ -341,11 +341,7 @@ private class ChatterBot(
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
       case FromMainBot(PrivateCommand("autre", args)) =>
-        if (Authorization.valid(args.head)) {
-          handlePDFRequest(data, args.head, args.tail)
-        } else {
-          sendText("Cette raison n'est pas connue")
-        }
+        handlePDFRequest(data, args.head.split("""[;,+-]""").toSeq, args.tail)
         Behaviors.same
       case FromMainBot(PrivateCommand("vierge", _)) =>
         handleEmptyPDFRequest(data)
@@ -409,14 +405,35 @@ private class ChatterBot(
     * Handle a PDF request incoming command.
     *
     * @param data the user data
-    * @param reason the reason for going out
+    * @param reasons the reasons for going out
     * @param args the arguments given by the user (such as "oubli" or an explicit hour)
     */
   private[this] def handlePDFRequest(
       data: PersonalData,
-      reason: String,
+      reasons: Seq[String],
       args: Seq[String]
   ): Unit = {
+    val (validReasons, invalidReasons) = {
+      val (v, i) = reasons.partition(Authorization.reasons.contains)
+      (Authorization.unifyValidReasons(v), i.toSet.toSeq)
+    }
+    if (invalidReasons.nonEmpty) {
+      val next = if (validReasons.isEmpty) {
+        "Aucun motif valable trouvé, génération du PDF impossible"
+      } else { "Seuls les autres motifs seront utilisés" }
+      sendText(
+        s"Les motifs suivants sont invalides : ${invalidReasons.mkString(", ")}. $next."
+      )
+    }
+    if (validReasons.isEmpty) {
+      return
+    }
+    if (validReasons.length > 1) {
+      sendText(
+        "⚠️ Attention, rien dans les textes réglementaires ne semble indiquer qu'il est possible " +
+          "d'utiliser plusieurs motifs simultanément"
+      )
+    }
     parseHour(args) match {
       case Right(outputDateTime) =>
         val madeTime = if (outputDateTime.getMinute % 5 == 0) {
@@ -426,7 +443,7 @@ private class ChatterBot(
         }
         val day = outputDateTime.getDayOfWeek.toFrenchDay
         val caption =
-          s"Sortie $reason $day à ${utils.timeText(outputDateTime)} pour ${data.fullName}"
+          s"Sortie ${validReasons.mkString("+")} $day à ${utils.timeText(outputDateTime)} pour ${data.fullName}"
         implicit val timeout: Timeout = 10.seconds
         context.ask[BuildPDF, Array[Byte]](
           pdfBuilder,
@@ -436,7 +453,7 @@ private class ChatterBot(
               Authorization(
                 output = outputDateTime,
                 made = madeTime,
-                reason = reason
+                reasons = validReasons
               )
             ),
             _
@@ -483,8 +500,8 @@ object ChatterBot {
         new ChatterBot(context, outgoing, user, pdfBuilder, db, debugActor).startingPoint
       }
       .transformMessages {
-        // We expand commands "/animaux" and "/famille" into the generic command here
-        case PrivateCommand(command @ ("animaux" | "famille"), args) =>
+        // We expand commands "/sport" and "/courses" into the generic command here
+        case PrivateCommand(command @ ("sport" | "courses"), args) =>
           FromMainBot(PrivateCommand("autre", command +: args))
         case fromMainBot => FromMainBot(fromMainBot)
       }
@@ -564,10 +581,10 @@ object ChatterBot {
 
   private val defaultButtons: Seq[Seq[String]] = {
     Seq(
-      Seq("/animaux", "/famille"),
+      Seq("/sport", "/courses"),
       Seq(
-        s"/animaux oubli",
-        s"/famille oubli"
+        s"/sport oubli",
+        s"/courses oubli"
       )
     )
   }
