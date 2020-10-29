@@ -12,22 +12,24 @@ object Authorization {
 
   /**
     * Dictionary mapping reason and reason aliases (for example "santé" and "promenade" are respective aliases of
-    * "sante" and "sport") to their official designation in the QR-code and the (X, Y) position in the PDF.
+    * "sante" and "sport") to their official designation in the QR-code and the Y position in the PDF.
     */
-  val reasons: Map[String, (String, Float, Float)] = {
-    val data: Seq[(String, Float, Float, Seq[String])] = Seq(
-      ("travail", 76, 527, Seq()),
-      ("courses", 76, 478, Seq()),
-      ("sante", 76, 436, Seq("santé")),
-      ("famille", 76, 400, Seq()),
-      ("sport", 76, 345, Seq("promenade")),
-      ("judiciaire", 76, 298, Seq()),
-      ("missions", 76, 260, Seq("mission"))
+  val reasons: Map[String, (String, Float)] = {
+    val data: Seq[(String, Float, Seq[String])] = Seq(
+      ("travail", 578, Seq()),
+      ("achats", 533, Seq("courses")),
+      ("sante", 477, Seq("santé", "soins")),
+      ("famille", 435, Seq()),
+      ("handicap", 396, Seq()),
+      ("sport_animaux", 358, Seq("sport", "animaux", "promenade")),
+      ("convocation", 295, Seq("judiciaire")),
+      ("missions", 255, Seq("mission")),
+      ("enfants", 211, Seq("scolaire", "école"))
     )
     data.flatMap {
-      case (canonical, x, y, aliases) =>
-        Seq(canonical -> (canonical, x, y)) ++ aliases.map(alias =>
-          (alias -> (canonical, x, y))
+      case (canonical, y, aliases) =>
+        Seq(canonical -> (canonical, y)) ++ aliases.map(alias =>
+          (alias -> (canonical, y))
         )
     }.toMap
   }
@@ -44,7 +46,7 @@ object Authorization {
         case ((result, done), reason) =>
           val canonical = reasons(reason)._1
           if (done.contains(canonical)) { (result, done) }
-          else { (result :+ reason, done + canonical) }
+          else { (result :+ canonical, done + canonical) }
       }
       ._1
   }
@@ -56,7 +58,7 @@ object Authorization {
     */
   def orderedCanonicalValidReasons(rs: Seq[String]): Seq[String] = {
     rs.flatMap(reasons.get)
-      .sortBy { case (_, _, y) => -y }
+      .sortBy { case (_, y) => -y }
       .map(_._1)
   }
 

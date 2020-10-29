@@ -6,11 +6,11 @@ class AuthorizationSpec extends Specification {
   "unifyValidReasons" should {
     "remove the duplicates by keeping the first one only" in {
       Authorization.unifyValidReasons(Seq("sport", "famille", "promenade")) must be equalTo (Seq(
-        "sport",
+        "sport_animaux",
         "famille"
       ))
       Authorization.unifyValidReasons(Seq("promenade", "famille", "sport")) must be equalTo (Seq(
-        "promenade",
+        "sport_animaux",
         "famille"
       ))
     }
@@ -30,7 +30,7 @@ class AuthorizationSpec extends Specification {
         "travail",
         "sante",
         "famille",
-        "sport"
+        "sport_animaux"
       ))
       Authorization.orderedCanonicalValidReasons(
         Seq("famille", "santé", "promenade", "travail")
@@ -38,7 +38,7 @@ class AuthorizationSpec extends Specification {
         "travail",
         "sante",
         "famille",
-        "sport"
+        "sport_animaux"
       ))
     }
   }

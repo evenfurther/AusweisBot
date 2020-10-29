@@ -60,19 +60,20 @@ object QRCode {
       data: PersonalData,
       auth: Authorization
   ): QRCode = {
+    new QRCode(width, height, buildContent(data, auth))
+  }
+
+  def buildContent(data: PersonalData, auth: Authorization): String = {
     import utils._
     val reasons =
-      Authorization
-        .orderedCanonicalValidReasons(auth.reasons)
-        .mkString("-")
-    val text = s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)}
-                  |Nom: ${data.lastName}
-                  |Prenom: ${data.firstName}
-                  |Naissance: ${data.birthDateText} a ${data.birthPlace}
-                  |Adresse: ${data.street} ${data.zip} ${data.city}
-                  |Sortie: ${dateText(auth.output)} a ${timeText(auth.output)}
-                  |Motifs: $reasons
-                  |""".stripMargin.linesIterator.mkString("; ")
-    new QRCode(width, height, text)
+      Authorization.orderedCanonicalValidReasons(auth.reasons).mkString(", ")
+    s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)
+         .replace(':', 'h')}
+       |Nom: ${data.lastName}
+       |Prenom: ${data.firstName}
+       |Naissance: ${data.birthDateText} a ${data.birthPlace}
+       |Adresse: ${data.street} ${data.zip} ${data.city}
+       |Sortie: ${dateText(auth.output)} a ${timeText(auth.output)}
+       |Motifs: $reasons""".stripMargin.linesIterator.mkString(";\n")
   }
 }

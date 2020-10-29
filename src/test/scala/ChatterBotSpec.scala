@@ -115,7 +115,7 @@ class ChatterBotSpec extends Specification {
       pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
         case PDFBuilder.BuildPDF(
             `modelData`,
-            Some(Authorization(output, made, Seq("santé", "promenade"))),
+            Some(Authorization(output, made, Seq("sante", "sport_animaux"))),
             replyTo
             ) =>
           output.toLocalTime must be equalTo (LocalTime.of(hour, 30))
@@ -124,13 +124,15 @@ class ChatterBotSpec extends Specification {
           mlt.getMinute must be lessThan (30)
           mlt.getMinute must be greaterThan (25)
           replyTo ! Array(1, 2, 3)
-        case _ => failure
+        case s =>
+          failure
       }
       outgoing.expectMessageType[SendText].text must contain(
         "plusieurs motifs simultanément"
       )
-      val documentTitle =
-        f"Sortie santé+promenade ${day.toFrenchDay}%s à ${hour}%02dh30 pour John Doe"
+      val documentTitle = {
+        f"Sortie sante+sport_animaux ${day.toFrenchDay}%s à ${hour}%02d:30 pour John Doe"
+      }
       outgoing.expectMessageType[SendFile] match {
         case SendFile(
             chatId: ChatId,
@@ -138,7 +140,8 @@ class ChatterBotSpec extends Specification {
             Some(`documentTitle`)
             ) =>
           chatId must be equalTo (ChatId(42))
-        case _ => failure
+        case s =>
+          failure
       }
       debug.expectMessage(s"""Sent document "$documentTitle"""")
     }
