@@ -76,8 +76,8 @@ permettant de vous contacter sont à jour.
 __Que pensez-vous du principe de cette attestation dérogatoire de déplacement ?__
 
 Peu importe ce que j'en pense, la présentation d'un document attestant d'une raison valable
-de sortie est rendue obligatoire par l'article 3 du
-[décret n° 2020-293 du 23 mars 2020](https://www.legifrance.gouv.fr/affichTexte.do?cidTexte=JORFTEXT000041746694).
+de sortie est rendue obligatoire par l'article 4 du
+[décret n° 2020-1310 du 29 octobre 2020](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000042475143).
 Pour limiter les contacts lors du contrôle, il me semble plus simple de présenter une attestation
 identique à ce que propose le service en ligne du ministère de l'intérieur en y incluant
 un QR-code incorporant le même contenu.
