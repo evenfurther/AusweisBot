@@ -277,7 +277,7 @@ private class ChatterBot(
             }
           }
           .narrow
-      case PDFSuccess(content, caption) =>
+      case PDFSuccess(content, caption, _) =>
         sendCertificate(content, caption)
         Behaviors.same
       case PDFFailure(_) => Behaviors.same
@@ -291,9 +291,10 @@ private class ChatterBot(
     * @return the behavior to handle incoming commands
     */
   private[this] def offerCommands(
-      data: PersonalData
+      data: PersonalData,
+      reasons: Seq[String] = Seq()
   ): Behavior[ChatterBotControl] = {
-    sendButtonsText()
+    sendButtonsText(reasons)
     handleCommands(data)
   }
 
@@ -351,9 +352,9 @@ private class ChatterBot(
         Behaviors.same
       case FromMainBot(AnnounceShutdown(_)) =>
         Behaviors.stopped
-      case PDFSuccess(content, caption) =>
+      case PDFSuccess(content, caption, reasons) =>
         sendCertificate(content, caption)
-        offerCommands(data)
+        offerCommands(data, reasons)
       case PDFFailure(e) =>
         sendText(
           s"Erreur interne lors de la génération du PDF, réessayez plus tard: $e"
@@ -374,10 +375,10 @@ private class ChatterBot(
       parseMode = Some(ParseMode.Markdown)
     )
 
-  private[this] def sendButtonsText(): Unit =
+  private[this] def sendButtonsText(reasons: Seq[String] = Seq()): Unit =
     sendText(
       "Choisissez un certificat à générer (utilisez /help pour l'aide)",
-      defaultButtons
+      makeButtons(reasons)
     )
 
   /**
@@ -396,7 +397,7 @@ private class ChatterBot(
         _
       )
     ) {
-      case Success(document) => PDFSuccess(document, Some(caption))
+      case Success(document) => PDFSuccess(document, Some(caption), Seq())
       case Failure(e)        => PDFFailure(e)
     }
   }
@@ -413,9 +414,9 @@ private class ChatterBot(
       reasons: Seq[String],
       args: Seq[String]
   ): Unit = {
-    val (validReasons, invalidReasons) = {
+    val (validReasons, invalidReasons, validReasonsRaw) = {
       val (v, i) = reasons.partition(Authorization.reasons.contains)
-      (Authorization.unifyValidReasons(v), i.toSet.toSeq)
+      (Authorization.unifyValidReasons(v), i.toSet.toSeq, v)
     }
     if (invalidReasons.nonEmpty) {
       val next = if (validReasons.isEmpty) {
@@ -460,8 +461,9 @@ private class ChatterBot(
             _
           )
         ) {
-          case Success(document) => PDFSuccess(document, Some(caption))
-          case Failure(e)        => PDFFailure(e)
+          case Success(document) =>
+            PDFSuccess(document, Some(caption), validReasonsRaw)
+          case Failure(e) => PDFFailure(e)
         }
       case Left(text) =>
         sendText(text)
@@ -514,8 +516,11 @@ object ChatterBot {
   case class FromMainBot(fromMainBot: PerChatBotCommand)
       extends ChatterBotControl
 
-  private case class PDFSuccess(content: Array[Byte], caption: Option[String])
-      extends ChatterBotControl
+  private case class PDFSuccess(
+      content: Array[Byte],
+      caption: Option[String],
+      reasons: Seq[String]
+  ) extends ChatterBotControl
   private case class PDFFailure(e: Throwable) extends ChatterBotControl
 
   private case class CachedData(data: PersonalData) extends ChatterBotControl
@@ -583,14 +588,14 @@ object ChatterBot {
     }
   }
 
-  private val defaultButtons: Seq[Seq[String]] = {
+  private def makeButtons(reasons: Seq[String]): Seq[Seq[String]] = {
+    val latestReasons =
+      Authorization
+        .unifyReasons(reasons ++ Seq("sport", "courses", "travail"))
+        .take(3)
     Seq(
-      Seq("/sport", "/courses", "/travail"),
-      Seq(
-        s"/sport oubli",
-        s"/courses oubli",
-        s"/travail oubli"
-      )
+      latestReasons.map("/" + _),
+      latestReasons.map("/" + _ + " oubli")
     )
   }
 

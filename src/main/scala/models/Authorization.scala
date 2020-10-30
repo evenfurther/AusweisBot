@@ -12,7 +12,8 @@ object Authorization {
 
   /**
     * Dictionary mapping reason and reason aliases (for example "santé" and "promenade" are respective aliases of
-    * "sante" and "sport") to their official designation in the QR-code and the Y position in the PDF.
+    * "sante" and "sport") to their official designation in the QR-code and the Y position in the PDF as well as
+    * a pretty string.
     */
   val reasons: Map[String, (String, Float, String)] = {
     val data: Seq[(String, Float, Seq[String], String)] = Seq(
@@ -25,7 +26,7 @@ object Authorization {
         "sport_animaux",
         358,
         Seq("sport", "animaux", "promenade", "sortie"),
-        "sport ou animaux"
+        "promenade"
       ),
       ("convocation", 295, Seq("judiciaire"), "convocation"),
       ("missions", 255, Seq("mission"), "missions"),
@@ -41,19 +42,30 @@ object Authorization {
 
   /**
     * Make valid reasons unique (for example "sport" and "promenade" are the same reason)
+    * by only keeping the first one of a kind, without trying to get the canonical ones.
+    *
+    * @param rs the sequence of reasons, with possible duplicates
+    * @return a sequence of reasons without duplicates
+    */
+  def unifyReasons(rs: Seq[String]): Seq[String] = {
+    rs.foldLeft((Seq[String](), Set[String]())) {
+        case ((result, done), reason) =>
+          val canonical = reasons(reason)._1
+          if (done.contains(canonical)) { (result, done) }
+          else { (result :+ reason, done + canonical) }
+      }
+      ._1
+  }
+
+  /**
+    * Make valid reasons unique (for example "sport" and "promenade" are the same reason)
     * by only keeping the first one of a kind.
     *
     * @param rs the sequence of reasons, with possible duplicates
     * @return a sequence of reasons without duplicates
     */
   def unifyValidReasons(rs: Seq[String]): Seq[String] = {
-    rs.foldLeft((Seq[String](), Set[String]())) {
-        case ((result, done), reason) =>
-          val canonical = reasons(reason)._1
-          if (done.contains(canonical)) { (result, done) }
-          else { (result :+ canonical, done + canonical) }
-      }
-      ._1
+    unifyReasons(rs).map(reasons(_)._1)
   }
 
   /**
