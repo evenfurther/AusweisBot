@@ -15,6 +15,7 @@ import akka.actor.typed.{
 import com.bot4s.telegram.api.RequestHandler
 import com.bot4s.telegram.models.{ChatId, User}
 import com.typesafe.config.ConfigFactory
+import models.Authorization
 import org.apache.commons.io.IOUtils
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 import sun.misc.{Signal, SignalHandler}
@@ -24,8 +25,9 @@ import scala.concurrent.duration._
 
 object Ausweis extends App {
 
-  val config = if (args.isEmpty) { ConfigFactory.load() }
-  else {
+  val config = if (args.isEmpty) {
+    ConfigFactory.load()
+  } else {
     ConfigFactory
       .parseFile(new File(args(0)))
       .withFallback(ConfigFactory.load())
@@ -36,9 +38,19 @@ object Ausweis extends App {
   LoggerConfig.level = LogLevel.INFO
 
   // Fill global configuration
-  GlobalConfig.help = Some(
-    IOUtils.resourceToString("/help.md", Charset.forName("UTF-8"))
-  )
+  GlobalConfig.help = Some {
+    val reasons: String = Authorization.reasonsAndAliases
+      .map {
+        case (reason, aliases) =>
+          s"- `/$reason`${if (aliases.nonEmpty)
+            s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
+          else ""}"
+      }
+      .mkString("\n")
+    IOUtils
+      .resourceToString("/help.md", Charset.forName("UTF-8"))
+      .replace("REASONS", reasons)
+  }
   GlobalConfig.privacyPolicy = Some(
     IOUtils
       .resourceToString("/privacy.md", Charset.forName("UTF-8"))

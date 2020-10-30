@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "com.google.zxing" % "core" % "3.4.1",
   "com.google.zxing" % "javase" % "3.4.1",
   "commons-io" % "commons-io" % "2.8.0",
+  "org.apache.commons" % "commons-lang3" % "3.11",
   "com.bot4s" %% "telegram-core" % "4.4.0-RC2",
   "com.bot4s" %% "telegram-akka" % "4.4.0-RC2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
@@ -25,7 +26,7 @@ libraryDependencies ++= Seq(
 assemblyOutputPath in assembly := file("ausweis.jar")
 
 assemblyMergeStrategy in assembly := {
-  case "module-info.class" => MergeStrategy.discard  // Necessary for jackson
+  case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
