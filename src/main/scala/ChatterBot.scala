@@ -500,8 +500,11 @@ object ChatterBot {
         new ChatterBot(context, outgoing, user, pdfBuilder, db, debugActor).startingPoint
       }
       .transformMessages {
-        // We expand commands "/sport" and "/courses" into the generic command here
-        case PrivateCommand(command @ ("sport" | "courses"), args) =>
+        // We expand commands into the generic command here
+        case PrivateCommand(
+            command,
+            args
+            ) if Authorization.reasons.contains(command) =>
           FromMainBot(PrivateCommand("autre", command +: args))
         case fromMainBot => FromMainBot(fromMainBot)
       }

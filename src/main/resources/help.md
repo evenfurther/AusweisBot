@@ -16,11 +16,17 @@ Les commandes suivantes sont disponibles une fois que les données personnelles 
 - `/autre motifs`, `/autre motifs oubli` ou `/autre motifs 11h30` : Attestation pour un ou plusieurs motifs séparés par `+`.
 - `/vierge` : Fournit un formulaire pré-rempli à imprimer, compléter et signer.
 
-Les motifs utilisables dans la commande `/autre`, séparés par un `+`, sont : `travail`, `courses`, `santé`, `famille`, `sport`, `judiciaire` ou `missions`. Exemples d'utilisation :
+Les motifs utilisables dans la commande `/autre`, séparés par un `+`, sont : `travail`, `courses`, `santé`, `famille`, `sport`, `handicap`, `judiciaire` ou `missions`. Exemples d'utilisation :
 
 - `/autre sport+courses`
 - `/autre santé oubli`
 - `/autre famille 11h30`
+
+Chaque motif peut être utilisé directement en tant que commande :
+
+- `/famille`
+- `/travail 5h30`
+- `/judiciaire oubli`
 
 Telegram ne transmettant pas le fuseau horaire dans lequel se trouve l'utilisateur, la génération des attestations sans heure explicite ne fonctionne que pour la France métropolitaine.
 
