@@ -61,7 +61,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
         addText(content, 264, 153, timeText(auth.output), arial, 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
-            case (_, y) =>
+            case (_, y, _) =>
               addText(content, 84, y, "x", PDType1Font.HELVETICA, 18)
           }
         }

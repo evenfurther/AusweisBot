@@ -443,7 +443,8 @@ private class ChatterBot(
         }
         val day = outputDateTime.getDayOfWeek.toFrenchDay
         val caption =
-          s"Sortie ${validReasons.mkString("+")} $day à ${utils.timeText(outputDateTime)} pour ${data.fullName}"
+          s"Sortie ${validReasons.map(Authorization.prettyReason).mkString("/")} $day à ${utils
+            .timeText(outputDateTime)} pour ${data.fullName}"
         implicit val timeout: Timeout = 10.seconds
         context.ask[BuildPDF, Array[Byte]](
           pdfBuilder,
