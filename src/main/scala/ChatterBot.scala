@@ -585,10 +585,11 @@ object ChatterBot {
 
   private val defaultButtons: Seq[Seq[String]] = {
     Seq(
-      Seq("/sport", "/courses"),
+      Seq("/sport", "/courses", "/travail"),
       Seq(
         s"/sport oubli",
-        s"/courses oubli"
+        s"/courses oubli",
+        s"/travail oubli"
       )
     )
   }
