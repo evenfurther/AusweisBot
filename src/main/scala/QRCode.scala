@@ -19,7 +19,7 @@ class QRCode(width: Int, height: Int, text: String) {
   private[this] val matrix = {
     val hintMap = Map(
       EncodeHintType.ERROR_CORRECTION -> ErrorCorrectionLevel.M,
-      EncodeHintType.MARGIN -> -1
+      EncodeHintType.MARGIN -> 1
     )
     new MultiFormatWriter().encode(
       text,
