@@ -8,9 +8,9 @@ import scala.collection.mutable.Queue
 
 object BotUtils {
 
-  private sealed trait WITControl[T]
+  private sealed trait WITControl[+T]
   private case class WITMessage[T](message: T) extends WITControl[T]
-  private case class WITIdleTimeout[T]() extends WITControl[T]
+  private case object WITIdleTimeout extends WITControl[Nothing]
   private case object WITTimer
 
   private sealed trait ThrottleControl[+T]
@@ -41,14 +41,14 @@ object BotUtils {
           context.watch(inner)
           Behaviors
             .withTimers[WITControl[T]] { timers =>
-              timers.startSingleTimer(WITTimer, WITIdleTimeout[T](), timeout)
+              timers.startSingleTimer(WITTimer, WITIdleTimeout, timeout)
               Behaviors
                 .receiveMessage[WITControl[T]] {
                   case WITMessage(message) =>
                     inner ! message
-                    timers.startSingleTimer(WITTimer, WITIdleTimeout(), timeout)
+                    timers.startSingleTimer(WITTimer, WITIdleTimeout, timeout)
                     Behaviors.same
-                  case WITIdleTimeout() =>
+                  case WITIdleTimeout =>
                     controller ! timeoutMessage
                     Behaviors.same
                 }
