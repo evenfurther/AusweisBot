@@ -23,7 +23,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
     val doc = PDDocument.load(model)
     val arial = PDType0Font.load(doc, new ByteArrayInputStream(arialFont))
     val qrCodeImg = auth.map { auth =>
-      val qrCode = QRCode(220, 220, data, auth)
+      val qrCode = QRCode(300, data, auth)
       PDImageXObject.createFromByteArray(doc, qrCode.pngBytes, "qrcode.png")
     }
 
@@ -66,7 +66,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
           }
         }
       }
-      qrCodeImg.foreach(content.drawImage(_, 439, 95, 92, 92))
+      qrCodeImg.foreach(content.drawImage(_, 439, 100, 92, 92))
 
       content.close()
     }
