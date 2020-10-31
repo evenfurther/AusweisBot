@@ -8,7 +8,7 @@ import org.apache.pdfbox.pdmodel.font.{PDFont, PDType0Font, PDType1Font}
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.pdmodel.{PDDocument, PDPage, PDPageContentStream}
 
-class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
+class PDFBuilder(model: Array[Byte]) {
 
   /**
     * Build a PDF document from personal data and optional output from home information.
@@ -21,7 +21,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
   def buildPDF(data: PersonalData, auth: Option[Authorization]): Array[Byte] = {
     import utils._
     val doc = PDDocument.load(model)
-    val arial = PDType0Font.load(doc, new ByteArrayInputStream(arialFont))
+    PDFBuilder.addMetadata(doc)
     val qrCodeImg = auth.map { auth =>
       val qrCode = QRCode(300, data, auth)
       PDImageXObject.createFromByteArray(doc, qrCode.pngBytes, "qrcode.png")
@@ -42,27 +42,25 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
         119,
         696,
         s"${data.firstName} ${data.lastName}",
-        arial,
         11
       )
-      addText(content, 119, 674, data.birthDateText, arial, 11)
-      addText(content, 297, 674, data.birthPlace, arial, 11)
+      addText(content, 119, 674, data.birthDateText, 11)
+      addText(content, 297, 674, data.birthPlace, 11)
       addText(
         content,
         133,
         652,
         s"${data.street} ${data.zip} ${data.city}",
-        arial,
         11
       )
-      addText(content, 105, 177, data.city, arial, 11)
+      addText(content, 105, 177, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 91, 153, dateText(auth.output), arial, 11)
-        addText(content, 264, 153, timeText(auth.output), arial, 11)
+        addText(content, 91, 153, dateText(auth.output), 11)
+        addText(content, 264, 153, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _) =>
-              addText(content, 84, y, "x", PDType1Font.HELVETICA, 18)
+              addText(content, 84, y, "x", 18)
           }
         }
       }
@@ -97,11 +95,10 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
       x: Float,
       y: Float,
       text: String,
-      font: PDFont,
       size: Int
   ) {
     content.beginText()
-    content.setFont(font, size)
+    content.setFont(PDType1Font.HELVETICA, size)
     content.newLineAtOffset(x, y)
     content.showText(text)
     content.endText()
@@ -121,19 +118,26 @@ object PDFBuilder {
     * Make a PDF builder.
     *
     * @param model the original PDF to start with
-    * @param arialFont the arial font data
     * @return a behavior to serially build PDF documents
     */
-  def makeActor(
-      model: Array[Byte],
-      arialFont: Array[Byte]
-  ): Behavior[BuildPDF] = Behaviors.setup { implicit context =>
-    val pdfBuilder = new PDFBuilder(model, arialFont)
+  def makeActor(model: Array[Byte]): Behavior[BuildPDF] = Behaviors.setup { implicit context =>
+    val pdfBuilder = new PDFBuilder(model)
     Behaviors.receiveMessage {
       case BuildPDF(data, auth, replyTo) =>
         replyTo ! pdfBuilder.buildPDF(data, auth)
         Behaviors.same
     }
+  }
+
+  private def addMetadata(doc: PDDocument) {
+    val info = doc.getDocumentInformation()
+    info.setTitle("COVID-19 - Déclaration de déplacement")
+    info.setSubject("Attestation de déplacement dérogatoire")
+    info.setKeywords("covid19,covid-19,attestation,déclaration,déplacement,officielle,gouvernement")
+    info.setProducer("DNUM/SDIT")
+    info.setCreator("")
+    info.setAuthor("Ministère de l'intérieur")
+    doc.setVersion(1.7f)
   }
 
 }
