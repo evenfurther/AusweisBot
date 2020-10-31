@@ -8,16 +8,16 @@ import scala.collection.mutable.Queue
 
 object BotUtils {
 
-  private sealed trait WITControl[+T]
-  private case class WITMessage[T](message: T) extends WITControl[T]
-  private case object WITIdleTimeout extends WITControl[Nothing]
-  private case object WITTimer
-
-  private sealed trait ThrottleControl[+T]
-  private case class ThrottleMessage[T](message: T) extends ThrottleControl[T]
-  private case object ThrottleUnblock extends ThrottleControl[Nothing]
+  private object WithIdleTimeout {
+    sealed trait WITControl[+T]
+    case class WITMessage[T](message: T) extends WITControl[T]
+    case object WITIdleTimeout extends WITControl[Nothing]
+    case object WITTimer
+  }
 
   implicit class WithIdleTimeout[T: ClassTag](behavior: Behavior[T]) {
+
+    import WithIdleTimeout._
 
     /**
       * Surround the behavior with a timeout controlling one. All messages are
@@ -64,8 +64,15 @@ object BotUtils {
         .transformMessages[T] { case msg => WITMessage(msg) }
   }
 
+  private object WithThrottling {
+    sealed trait ThrottleControl[+T]
+    case class ThrottleMessage[T](message: T) extends ThrottleControl[T]
+    case object ThrottleUnblock extends ThrottleControl[Nothing]
+  }
 
   implicit class WithTrottling[T: ClassTag](behavior: Behavior[T]) {
+
+    import WithThrottling._
 
     /**
       * Surround the behaviour with a throttling one. Incoming messages
@@ -78,37 +85,43 @@ object BotUtils {
       * @param maxQueueSize the maximum queue size
       * @return the throttled behavior
       */
-    def withThrottling(delay: FiniteDuration, maxQueueSize: Int): Behavior[T] = {
-      Behaviors.setup[ThrottleControl[T]] { context =>
-        val inner = context.spawnAnonymous(behavior)
-        var queue: Queue[T] = Queue()
-        var waiting = false
-        Behaviors.withTimers { timers =>
-          Behaviors.receiveMessage {
-            case ThrottleMessage(message) =>
-              if (waiting) {
-                queue :+= message
-                if (queue.size > maxQueueSize)
-                  queue.clear()
-              } else {
-                inner ! message
-                timers.startSingleTimer(ThrottleUnblock, delay)
-                waiting = true
-              }
-              Behaviors.same
-            case ThrottleUnblock =>
+    def withThrottling(
+        delay: FiniteDuration,
+        maxQueueSize: Int
+    ): Behavior[T] = {
+      Behaviors
+        .setup[ThrottleControl[T]] { context =>
+          val inner = context.spawnAnonymous(behavior)
+          var queue: Queue[T] = Queue()
+          var waiting = false
+          Behaviors.withTimers { timers =>
+            Behaviors.receiveMessage {
+              case ThrottleMessage(message) =>
+                if (waiting) {
+                  if (queue.size >= maxQueueSize)
+                    queue.clear()
+                  else
+                    queue :+= message
+                } else {
+                  inner ! message
+                  timers.startSingleTimer(ThrottleUnblock, delay)
+                  waiting = true
+                }
+                Behaviors.same
+              case ThrottleUnblock =>
                 if (queue.isEmpty)
                   waiting = false
                 else {
                   inner ! queue.dequeue()
                   timers.startSingleTimer(ThrottleUnblock, delay)
                 }
-              Behaviors.same
+                Behaviors.same
+            }
           }
         }
-      }.transformMessages[T] {
-        case message => ThrottleMessage(message)
-      }
+        .transformMessages[T] {
+          case message => ThrottleMessage(message)
+        }
     }
   }
 
