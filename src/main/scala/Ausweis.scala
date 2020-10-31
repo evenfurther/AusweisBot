@@ -161,6 +161,7 @@ object Ausweis extends App {
           parent,
           Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")
         ) // Main bot.
+        .withThrottling(2.seconds, 5)
     Bot(botToken, perChatStarter, debugActor)
   }
 }

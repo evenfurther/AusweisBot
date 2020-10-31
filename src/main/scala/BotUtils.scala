@@ -4,6 +4,7 @@ import com.bot4s.telegram.future.Polling
 
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
+import scala.collection.mutable.Queue
 
 object BotUtils {
 
@@ -11,6 +12,10 @@ object BotUtils {
   private case class WITMessage[T](message: T) extends WITControl[T]
   private case class WITIdleTimeout[T]() extends WITControl[T]
   private case object WITTimer
+
+  private sealed trait ThrottleControl[+T]
+  private case class ThrottleMessage[T](message: T) extends ThrottleControl[T]
+  private case object ThrottleUnblock extends ThrottleControl[Nothing]
 
   implicit class WithIdleTimeout[T: ClassTag](behavior: Behavior[T]) {
 
@@ -57,6 +62,54 @@ object BotUtils {
             .narrow[WITMessage[T]]
         }
         .transformMessages[T] { case msg => WITMessage(msg) }
+  }
+
+
+  implicit class WithTrottling[T: ClassTag](behavior: Behavior[T]) {
+
+    /**
+      * Surround the behaviour with a throttling one. Incoming messages
+      * are sent to the inner behavior with an inter-arrival delay. They
+      * are queued in the meantime. If the queue size is greater than the
+      * maximum allowed, the queue is emptied and all messages in it are
+      * ignored.
+      *
+      * @param delay the inter-arrival delay between messages
+      * @param maxQueueSize the maximum queue size
+      * @return the throttled behavior
+      */
+    def withThrottling(delay: FiniteDuration, maxQueueSize: Int): Behavior[T] = {
+      Behaviors.setup[ThrottleControl[T]] { context =>
+        val inner = context.spawnAnonymous(behavior)
+        var queue: Queue[T] = Queue()
+        var waiting = false
+        Behaviors.withTimers { timers =>
+          Behaviors.receiveMessage {
+            case ThrottleMessage(message) =>
+              if (waiting) {
+                queue :+ message
+                if (queue.size > maxQueueSize)
+                  queue.clear()
+              } else {
+                inner ! message
+                timers.startSingleTimer(ThrottleUnblock, delay)
+                waiting = true
+              }
+              Behaviors.same
+              case ThrottleUnblock =>
+                if (queue.isEmpty)
+                  waiting = false
+                else {
+                  inner ! queue.dequeue()
+                  timers.startSingleTimer(ThrottleUnblock, delay)
+                }
+              Behaviors.same
+          }
+        }
+      }.transformMessages[T] {
+        case message => ThrottleMessage(message)
+      }
+    }
   }
 
   /**
