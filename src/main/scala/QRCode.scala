@@ -1,8 +1,7 @@
 import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 
-import com.google.zxing.client.j2se.MatrixToImageWriter
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import com.google.zxing.{BarcodeFormat, EncodeHintType, MultiFormatWriter}
+import io.nayuki.qrcodegen.{QrCode, QrSegment}
 import models.{Authorization, PersonalData}
 
 import scala.collection.JavaConverters._
@@ -10,23 +9,20 @@ import scala.collection.JavaConverters._
 /**
   * QR-code object with correction level M.
   *
-  * @param width the desired width
-  * @param height the desired height
+  * @param size the desired side size
   * @param text the text to put into the QR code
   */
-class QRCode(width: Int, height: Int, text: String) {
+class QRCode(size: Int, text: String) {
 
   private[this] val matrix = {
-    val hintMap = Map(
-      EncodeHintType.ERROR_CORRECTION -> ErrorCorrectionLevel.M,
-      EncodeHintType.MARGIN -> 1
-    )
-    new MultiFormatWriter().encode(
-      text,
-      BarcodeFormat.QR_CODE,
-      width,
-      height,
-      hintMap.asJava
+    val segments = QrSegment.makeSegments(text)
+    QrCode.encodeSegments(
+      segments,
+      QrCode.Ecc.MEDIUM,
+      QrCode.MIN_VERSION,
+      QrCode.MAX_VERSION,
+      3,
+      true
     )
   }
 
@@ -36,8 +32,10 @@ class QRCode(width: Int, height: Int, text: String) {
     * @return the PNG data
     */
   def pngBytes: Array[Byte] = {
+    val scale = (size - 2) / matrix.size
+    val img = matrix.toImage(scale, 1)
     val stream = new ByteArrayOutputStream
-    MatrixToImageWriter.writeToStream(matrix, "png", stream)
+    ImageIO.write(img, "png", stream)
     stream.toByteArray
   }
 
@@ -48,20 +46,17 @@ object QRCode {
   /**
     * Build a QR-code.
     *
-    * @param width the desired width
-    * @param height the desired height
+    * @param size the desired side size
     * @param data the user data
     * @param auth the output from home information
     * @return a QR-code with correction level M containing the requested data
     */
   def apply(
-      width: Int,
-      height: Int,
+      size: Int,
       data: PersonalData,
       auth: Authorization
-  ): QRCode = {
-    new QRCode(width, height, buildContent(data, auth))
-  }
+  ): QRCode =
+    new QRCode(size, buildContent(data, auth))
 
   def buildContent(data: PersonalData, auth: Authorization): String = {
     import utils._

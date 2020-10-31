@@ -9,17 +9,29 @@ import java.awt.image.BufferedImage
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.{MultiFormatReader, Result}
+import com.google.zxing.ResultMetadataType
+import java.awt.Color
+import javax.imageio.ImageIO
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileOutputStream}
 
 class QRCodeSpec extends Specification {
 
-  def decodeOfficial(): Result = {
-      val reader = new com.google.zxing.MultiFormatReader
-      val image = javax.imageio.ImageIO.read(IOUtils.resourceToURL("/official-qrcode.png"))
-      val source = new BufferedImageLuminanceSource(image)
-      val binarizer = new HybridBinarizer(source)
-      val binaryBitmap = new BinaryBitmap(binarizer)
-      (new MultiFormatReader).decode(binaryBitmap)
+  def convertToBlackAndWhite(image: BufferedImage): BufferedImage = {
+    val result = new BufferedImage(
+      image.getWidth,
+      image.getHeight,
+      BufferedImage.TYPE_BYTE_BINARY
+    )
+    val graphics = result.createGraphics
+    graphics.drawImage(image, 0, 0, Color.WHITE, null);
+    graphics.dispose()
+    result
   }
+
+  def loadOfficial(): BufferedImage =
+    convertToBlackAndWhite(
+      javax.imageio.ImageIO.read(IOUtils.resourceToURL("/official-qrcode.png"))
+    )
 
   "buildContent" should {
     "generate the expected content" in {
@@ -57,7 +69,40 @@ class QRCodeSpec extends Specification {
         LocalDateTime.of(2020, 10, 31, 11, 13),
         Seq("travail")
       )
-      QRCode.buildContent(data, auth) must be equalTo(decodeOfficial.getText)
+      val officialBitmap = new BinaryBitmap(
+        new HybridBinarizer(new BufferedImageLuminanceSource(loadOfficial()))
+      )
+      val officialText = new MultiFormatReader().decode(officialBitmap)
+      QRCode.buildContent(data, auth) must be equalTo (officialText.getText)
+    }
+  }
+
+  "apply" should {
+    "generate a graphical QRCode similar to the official site" in {
+      val data = PersonalData(
+        "Doe",
+        "John",
+        LocalDate.of(1984, 3, 1),
+        "Paris 2",
+        "1 rue de la Paix",
+        "72635",
+        "Bézou-sur-Cher"
+      )
+      val auth = Authorization(
+        LocalDateTime.of(2020, 11, 1, 4, 5),
+        LocalDateTime.of(2020, 10, 31, 11, 13),
+        Seq("travail")
+      )
+      val qrCode = QRCode(236, data, auth)
+      val officialPng = loadOfficial()
+      val generatedPng = convertToBlackAndWhite(
+        ImageIO.read(new ByteArrayInputStream(qrCode.pngBytes))
+      )
+      val officialByteArray = new ByteArrayOutputStream
+      ImageIO.write(officialPng, "png", officialByteArray)
+      val generatedByteArray = new ByteArrayOutputStream
+      ImageIO.write(generatedPng, "png", generatedByteArray)
+      officialByteArray.toByteArray must be equalTo (generatedByteArray.toByteArray)
     }
   }
 }
