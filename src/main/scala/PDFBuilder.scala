@@ -21,6 +21,7 @@ class PDFBuilder(model: Array[Byte], arialFont: Array[Byte]) {
   def buildPDF(data: PersonalData, auth: Option[Authorization]): Array[Byte] = {
     import utils._
     val doc = PDDocument.load(model)
+    PDFBuilder.addMetadata(doc)
     val arial = PDType0Font.load(doc, new ByteArrayInputStream(arialFont))
     val qrCodeImg = auth.map { auth =>
       val qrCode = QRCode(300, data, auth)
@@ -134,6 +135,17 @@ object PDFBuilder {
         replyTo ! pdfBuilder.buildPDF(data, auth)
         Behaviors.same
     }
+  }
+
+  private def addMetadata(doc: PDDocument) {
+    val info = doc.getDocumentInformation()
+    info.setTitle("COVID-19 - Déclaration de déplacement")
+    info.setSubject("Attestation de déplacement dérogatoire")
+    info.setKeywords("covid19,covid-19,attestation,déclaration,déplacement,officielle,gouvernement")
+    info.setProducer("DNUM/SDIT")
+    info.setCreator("")
+    info.setAuthor("Ministère de l'intérieur")
+    doc.setVersion(1.7f)
   }
 
 }
