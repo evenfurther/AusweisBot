@@ -96,7 +96,7 @@ object BotUtils {
                 waiting = true
               }
               Behaviors.same
-              case ThrottleUnblock =>
+            case ThrottleUnblock =>
                 if (queue.isEmpty)
                   waiting = false
                 else {
