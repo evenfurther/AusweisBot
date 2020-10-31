@@ -87,7 +87,7 @@ object BotUtils {
           Behaviors.receiveMessage {
             case ThrottleMessage(message) =>
               if (waiting) {
-                queue :+ message
+                queue :+= message
                 if (queue.size > maxQueueSize)
                   queue.clear()
               } else {
