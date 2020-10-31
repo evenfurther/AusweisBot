@@ -129,10 +129,9 @@ object Ausweis extends App {
     // PDF builder actor
     val pdfBuilder = {
       val certificate = IOUtils.resourceToByteArray("/certificate.d1673940.pdf")
-      val arialFont = IOUtils.resourceToByteArray("/arial.ttf")
       context.spawn(
         Behaviors
-          .supervise(PDFBuilder.makeActor(certificate, arialFont))
+          .supervise(PDFBuilder.makeActor(certificate))
           .onFailure[Throwable](SupervisorStrategy.restart),
         "PDF-builder"
       )
