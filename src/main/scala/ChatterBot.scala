@@ -17,6 +17,7 @@ import models.{Authorization, DBProtocol, PersonalData}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
+import java.util.concurrent.TimeoutException
 
 // This actor is in charge of handling a conversation with a single user. It will try to load
 // information about the user from the database, and if it can't (information missing or database
@@ -355,9 +356,20 @@ private class ChatterBot(
       case PDFSuccess(content, caption, reasons) =>
         sendCertificate(content, caption)
         offerCommands(data, reasons)
+      case PDFFailure(_: TimeoutException) =>
+        sendText(
+          "Le système est trop chargé en ce moment, réessayez un peu plus tard"
+        )
+        debugActor.foreach(
+          _ ! s"Timeout for receiving PDF document for ${data.firstName} ${data.lastName}"
+        )
+        offerCommands(data)
       case PDFFailure(e) =>
         sendText(
-          s"Erreur interne lors de la génération du PDF, réessayez plus tard: $e"
+          "Erreur interne lors de la génération du PDF, réessayez plus tard"
+        )
+        debugActor.foreach(
+          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: $e"
         )
         offerCommands(data)
     }

@@ -26,6 +26,8 @@ libraryDependencies ++= Seq(
 
 assemblyOutputPath in assembly := file("ausweis.jar")
 
+test in assembly := {}
+
 assemblyMergeStrategy in assembly := {
   case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
