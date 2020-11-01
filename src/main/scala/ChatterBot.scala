@@ -617,7 +617,7 @@ object ChatterBot {
           val time =
             LocalTime.parse(
               spec.replace(':', 'h'),
-              DateTimeFormatter.ofPattern("H'h'mm")
+              DateTimeFormatter.ofPattern("H'h'[mm]")
             )
           addCredibleDate(time, now)
             .map(dt => Right(dt))
