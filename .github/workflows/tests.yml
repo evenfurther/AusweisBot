@@ -9,11 +9,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v2
+      - name: Get Ivy2 cache
+        uses: actions/cache@v2
         with:
           path: ~/.ivy2
           key: ivy2-files
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: SBT test
         id: sbt_test
         uses: lokkju/github-action-sbt@master
@@ -22,7 +24,8 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Docker build
         id: docker_build
         uses: docker/build-push-action@v2
