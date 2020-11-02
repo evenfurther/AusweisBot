@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt:11.0.6_1.3.9_2.12.10
+FROM hseeberger/scala-sbt:11.0.8_1.4.1_2.12.12
 MAINTAINER Samuel Tardieu, sam@rfc1149.net
 
 ADD build.sbt /workspace/
