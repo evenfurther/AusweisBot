@@ -40,11 +40,10 @@ object Ausweis extends App {
 
   // Fill global configuration
   GlobalConfig.help = Some {
-    val reasons: String = Authorization.reasonsAndAliases
-      .zipWithIndex
+    val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
       .map {
         case ((reason, aliases), i) =>
-          s"- Case ${i+1} : `/$reason`${if (aliases.nonEmpty)
+          s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
             s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
           else ""}"
       }
@@ -130,10 +129,9 @@ object Ausweis extends App {
   ) = {
     // PDF builder actor
     val pdfBuilder = {
-      val certificate = IOUtils.resourceToByteArray("/certificate.d1673940.pdf")
       context.spawn(
         Behaviors
-          .supervise(PDFBuilder.makeActor(certificate))
+          .supervise(PDFBuilder.makeActor())
           .onFailure[Throwable](SupervisorStrategy.restart),
         "PDF-builder"
       )

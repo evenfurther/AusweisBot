@@ -10,7 +10,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.pdmodel.{PDDocument, PDPage, PDPageContentStream}
 import scala.util.Try
 
-class PDFBuilder(model: Array[Byte]) {
+object PDFBuilder {
 
   /**
     * Build a PDF document from personal data and optional output from home information.
@@ -22,7 +22,7 @@ class PDFBuilder(model: Array[Byte]) {
     */
   def buildPDF(data: PersonalData, auth: Option[Authorization]): Array[Byte] = {
     import utils._
-    val doc = PDDocument.load(model)
+    val doc = PDDocument.load(GlobalConfig.certificate)
     PDFBuilder.addMetadata(doc)
     val qrCodeImg = auth.map { auth =>
       val qrCode = QRCode(300, data, auth)
@@ -111,10 +111,6 @@ class PDFBuilder(model: Array[Byte]) {
     content.endText()
   }
 
-}
-
-object PDFBuilder {
-
   case class BuildPDF(
       data: PersonalData,
       auth: Option[Authorization],
@@ -124,17 +120,14 @@ object PDFBuilder {
   /**
     * Make a PDF builder.
     *
-    * @param model the original PDF to start with
     * @return a behavior to serially build PDF documents
     */
-  def makeActor(model: Array[Byte]): Behavior[BuildPDF] = Behaviors.setup {
-    implicit context =>
-      val pdfBuilder = new PDFBuilder(model)
-      Behaviors.receiveMessage {
-        case BuildPDF(data, auth, replyTo) =>
-          replyTo ! Try { pdfBuilder.buildPDF(data, auth) }
-          Behaviors.same
-      }
+  def makeActor(): Behavior[BuildPDF] = Behaviors.setup { implicit context =>
+    Behaviors.receiveMessage {
+      case BuildPDF(data, auth, replyTo) =>
+        replyTo ! Try { buildPDF(data, auth) }
+        Behaviors.same
+    }
   }
 
   private def addMetadata(doc: PDDocument) {

@@ -130,7 +130,8 @@ des données personnelles. Vous pouvez préférer placer ces informations dans u
 racine de votre dépôt et le passer en premier argument du programme.
 
 Par défaut, le programme se connecte à une base de données [CouchDB](https://couchdb.apache.org)
-tournant localement sur le port par défaut.
+tournant localement sur le port par défaut en mode non protégé. Il faut donc n'autoriser que
+des connexions locales, ou utiliser des conteneurs (cf. ci-dessous).
 
 Vous pouvez lancer le bot avec la commande `run` (ou `run configuration-file`) de `sbt`.
 
@@ -146,3 +147,15 @@ de configuration `.env` à la racine du dépôt contenant _a minima_
 `CONTACT_EMAIL=votre-adresse-mail-de-contact`. Vous pouvez ensuite générer
 les conteneurs avec `docker-compose build` puis les lancer avec
 `docker-compose up`.
+
+Vous pouvez aussi récupérer automatiquement la dernière version officielle des conteneurs
+à partir de [DockerHub](https://hub.docker.com/r/rfc1149/ausweisbot), et lancer le tout
+en tâche de fond grâce aux commandes
+
+```bash
+$ docker-compose pull
+$ docker-compose up -d
+```
+
+Dans ce cas, vous n'avez besoin de rien d'autre que le fichier `.env` que vous avez créé
+et le fichier `docker-compose.yml` se trouvant à la racine du dépôt.
