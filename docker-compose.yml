@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   ausweis:
-    image: ausweis
+    image: rfc1149/ausweisbot:latest
     build: .
     depends_on:
       - db
