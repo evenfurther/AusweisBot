@@ -1,2 +1,2 @@
-status = [ "tests/test", "tests/package" ]
+status = [ "test", "package" ]
 delete_merged_branches = true
