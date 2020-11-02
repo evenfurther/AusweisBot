@@ -133,7 +133,9 @@ object PDFBuilder {
     val info = doc.getDocumentInformation()
     info.setTitle("COVID-19 - Déclaration de déplacement")
     info.setSubject("Attestation de déplacement dérogatoire")
-    info.setKeywords("covid19,covid-19,attestation,déclaration,déplacement,officielle,gouvernement")
+    info.setKeywords(
+      "covid19,covid-19,attestation,déclaration,déplacement,officielle,gouvernement"
+    )
     info.setProducer("DNUM/SDIT")
     info.setCreator("")
     info.setAuthor("Ministère de l'intérieur")
