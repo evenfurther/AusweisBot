@@ -22,6 +22,7 @@ import sun.misc.{Signal, SignalHandler}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import java.util.concurrent.TimeUnit
 
 object Ausweis extends App {
 
@@ -161,7 +162,13 @@ object Ausweis extends App {
           parent,
           Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")
         ) // Main bot.
-        .withThrottling(2.seconds, 5)
+        .withThrottling(
+          FiniteDuration(
+            ausweisConfig.getDuration("interrequest-delay").toNanos,
+            TimeUnit.NANOSECONDS
+          ),
+          ausweisConfig.getInt("max-queued-requests")
+        )
     Bot(botToken, perChatStarter, debugActor)
   }
 }
