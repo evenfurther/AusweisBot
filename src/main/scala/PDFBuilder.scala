@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.{PDFont, PDType0Font, PDType1Font}
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.pdmodel.{PDDocument, PDPage, PDPageContentStream}
+import scala.util.Try
 
 class PDFBuilder(model: Array[Byte]) {
 
@@ -111,7 +112,7 @@ object PDFBuilder {
   case class BuildPDF(
       data: PersonalData,
       auth: Option[Authorization],
-      replyTo: ActorRef[Array[Byte]]
+      replyTo: ActorRef[Try[Array[Byte]]]
   )
 
   /**
@@ -120,13 +121,14 @@ object PDFBuilder {
     * @param model the original PDF to start with
     * @return a behavior to serially build PDF documents
     */
-  def makeActor(model: Array[Byte]): Behavior[BuildPDF] = Behaviors.setup { implicit context =>
-    val pdfBuilder = new PDFBuilder(model)
-    Behaviors.receiveMessage {
-      case BuildPDF(data, auth, replyTo) =>
-        replyTo ! pdfBuilder.buildPDF(data, auth)
-        Behaviors.same
-    }
+  def makeActor(model: Array[Byte]): Behavior[BuildPDF] = Behaviors.setup {
+    implicit context =>
+      val pdfBuilder = new PDFBuilder(model)
+      Behaviors.receiveMessage {
+        case BuildPDF(data, auth, replyTo) =>
+          replyTo ! Try { pdfBuilder.buildPDF(data, auth) }
+          Behaviors.same
+      }
   }
 
   private def addMetadata(doc: PDDocument) {

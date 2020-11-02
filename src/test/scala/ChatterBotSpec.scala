@@ -9,6 +9,7 @@ import com.bot4s.telegram.models.{ChatId, User}
 import models.DBProtocol.{DBCommand, Delete, Load, Save}
 import models.{Authorization, PersonalData}
 import org.specs2.mutable._
+import scala.util.Success
 
 class ChatterBotSpec extends Specification {
 
@@ -123,7 +124,7 @@ class ChatterBotSpec extends Specification {
           mlt.getHour must be equalTo (hour)
           mlt.getMinute must be lessThan (30)
           mlt.getMinute must be greaterThan (25)
-          replyTo ! Array(1, 2, 3)
+          replyTo ! Success(Array(1, 2, 3))
         case s =>
           failure
       }
