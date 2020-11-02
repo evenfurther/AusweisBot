@@ -14,6 +14,7 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import java.text.Normalizer
 
 private class Bot(
     context: ActorContext[BotCommand],
@@ -204,12 +205,14 @@ object Bot {
     */
   private def parseText(
       text: String
-  ): PerChatBotCommand =
-    if (text.startsWith("/")) {
-      val words = text.split(' ')
+  ): PerChatBotCommand = {
+    val normalizedText = Normalizer.normalize(text, Normalizer.Form.NFC)
+    if (normalizedText.startsWith("/")) {
+      val words = normalizedText.split(' ')
       PrivateCommand(words.head.substring(1), words.toSeq.tail)
     } else {
-      PrivateMessage(text)
+      PrivateMessage(normalizedText)
     }
+  }
 
 }
