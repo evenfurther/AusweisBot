@@ -401,17 +401,17 @@ private class ChatterBot(
   private[this] def handleEmptyPDFRequest(data: PersonalData): Unit = {
     val caption = s"Attestation pré-remplie à imprimer pour ${data.fullName}"
     implicit val timeout: Timeout = 10.seconds
-    context.ask[BuildPDF, Array[Byte]](
+    context.ask[BuildPDF, Try[Array[Byte]]](
       pdfBuilder,
       BuildPDF(
         data,
         None,
         _
       )
-    ) {
+    )(_.flatten match {
       case Success(document) => PDFSuccess(document, Some(caption), Seq())
       case Failure(e)        => PDFFailure(e)
-    }
+    })
   }
 
   /**
@@ -459,7 +459,7 @@ private class ChatterBot(
           s"Sortie ${validReasons.map(Authorization.prettyReason).mkString("/")} $day à ${utils
             .timeText(outputDateTime)} pour ${data.fullName}"
         implicit val timeout: Timeout = 10.seconds
-        context.ask[BuildPDF, Array[Byte]](
+        context.ask[BuildPDF, Try[Array[Byte]]](
           pdfBuilder,
           BuildPDF(
             data,
@@ -472,11 +472,11 @@ private class ChatterBot(
             ),
             _
           )
-        ) {
+        )(_.flatten match {
           case Success(document) =>
             PDFSuccess(document, Some(caption), validReasonsRaw)
           case Failure(e) => PDFFailure(e)
-        }
+        })
       case Left(text) =>
         sendText(text)
         sendButtonsText()
