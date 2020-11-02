@@ -40,9 +40,10 @@ object Ausweis extends App {
   // Fill global configuration
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases
+      .zipWithIndex
       .map {
-        case (reason, aliases) =>
-          s"- `/$reason`${if (aliases.nonEmpty)
+        case ((reason, aliases), i) =>
+          s"- Case ${i+1} : `/$reason`${if (aliases.nonEmpty)
             s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
           else ""}"
       }
