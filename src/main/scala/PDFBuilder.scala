@@ -3,6 +3,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import models._
+import org.apache.commons.lang3.StringUtils
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.{PDFont, PDType0Font, PDType1Font}
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
@@ -101,7 +102,12 @@ class PDFBuilder(model: Array[Byte]) {
     content.beginText()
     content.setFont(PDType1Font.HELVETICA, size)
     content.newLineAtOffset(x, y)
-    content.showText(text)
+    try {
+      content.showText(text)
+    } catch {
+      case _: IllegalArgumentException =>
+        content.showText(StringUtils.stripAccents(text))
+    }
     content.endText()
   }
 
