@@ -23,10 +23,8 @@ object Authorization {
       Seq(
         "concours",
         "examen",
-        "examens",
         "formation",
         "professionnel",
-        "pro"
       ),
       None
     ),
@@ -40,7 +38,7 @@ object Authorization {
       Seq("sport", "animaux", "sortie"),
       Some("promenade")
     ),
-    ("convocation", 295, Seq("judiciaire", "justice"), None),
+    ("convocation", 295, Seq("administratif", "judiciaire"), None),
     ("missions", 255, Seq("mission"), None),
     (
       "enfants",
@@ -115,14 +113,20 @@ object Authorization {
   def prettyReason(reason: String): String = reasons(reason)._3
 
   /**
-    * List of reasons and their aliases, sorted.
+    * List of reasons and their aliases, sorted by reason then in
+    * analphabetical order.
     */
   val reasonsAndAliases: Seq[(String, Seq[String])] = {
     import scala.math.Ordering.Implicits.seqDerivedOrdering
-    data.map {
-      case (canonical, _, aliases, pretty) =>
-        (pretty getOrElse canonical, aliases.sorted)
-    }.sorted
+    data
+      .sortBy(-_._2)
+      .map {
+        case (canonical, _, aliases, pretty) =>
+          (
+            pretty getOrElse canonical,
+            aliases.sortBy(StringUtils.stripAccents)
+          )
+      }
   }
 
 }
