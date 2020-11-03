@@ -14,17 +14,7 @@ import scala.collection.JavaConverters._
   */
 class QRCode(size: Int, text: String) {
 
-  private[this] val matrix = {
-    val segments = QrSegment.makeSegments(text)
-    QrCode.encodeSegments(
-      segments,
-      QrCode.Ecc.MEDIUM,
-      QrCode.MIN_VERSION,
-      QrCode.MAX_VERSION,
-      3,
-      true
-    )
-  }
+  private[this] val matrix = QrCode.encodeText(text, QrCode.Ecc.MEDIUM)
 
   /**
     * Return the bytes making up the PNG for this QR code.
