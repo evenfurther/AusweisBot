@@ -76,33 +76,4 @@ class QRCodeSpec extends Specification {
       QRCode.buildContent(data, auth) must be equalTo (officialText.getText)
     }
   }
-
-  "apply" should {
-    "generate a graphical QRCode similar to the official site" in {
-      val data = PersonalData(
-        "Doe",
-        "John",
-        LocalDate.of(1984, 3, 1),
-        "Paris 2",
-        "1 rue de la Paix",
-        "72635",
-        "Bézou-sur-Cher"
-      )
-      val auth = Authorization(
-        LocalDateTime.of(2020, 11, 1, 4, 5),
-        LocalDateTime.of(2020, 10, 31, 11, 13),
-        Seq("travail")
-      )
-      val qrCode = QRCode(236, data, auth)
-      val officialPng = loadOfficial()
-      val generatedPng = convertToBlackAndWhite(
-        ImageIO.read(new ByteArrayInputStream(qrCode.pngBytes))
-      )
-      val officialByteArray = new ByteArrayOutputStream
-      ImageIO.write(officialPng, "png", officialByteArray)
-      val generatedByteArray = new ByteArrayOutputStream
-      ImageIO.write(generatedPng, "png", generatedByteArray)
-      officialByteArray.toByteArray must be equalTo (generatedByteArray.toByteArray)
-    }
-  }
 }
