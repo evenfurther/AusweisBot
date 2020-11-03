@@ -1,10 +1,9 @@
-name: tests
+name: Validation process
 on:
   push:
     branches:
       - staging
       - trying
-  pull_request:
 jobs:
   test:
     name: Unit tests
