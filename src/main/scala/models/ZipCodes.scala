@@ -1,3 +1,5 @@
+package models
+
 import java.io.StringReader
 import java.nio.charset.Charset
 

@@ -1,5 +1,5 @@
 import java.time._
-import java.time.format.{DateTimeFormatter, ResolverStyle}
+import java.time.format.DateTimeFormatter
 
 import Bot._
 import PDFBuilder.BuildPDF
@@ -12,7 +12,7 @@ import com.bot4s.telegram.methods.ParseMode
 import com.bot4s.telegram.methods.ParseMode.ParseMode
 import com.bot4s.telegram.models._
 import models.DBProtocol.DBCommand
-import models.{Authorization, DBProtocol, PersonalData}
+import models.{Authorization, DBProtocol, IncompletePersonalData, PersonalData}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -76,39 +76,8 @@ private class ChatterBot(
     )
   }
 
-  // Successive data to ask the user. The content of each tuple are:
-  //  - the prompt
-  //  - a checker function which can return either None if the entry is ok
-  //    or Some(errorMessage) to display to the user
-  //  - a suggestions function taking what's been entered so far in order
-  //    to propose possible alternatives as a keyboard to the user
-  private[this] val fields: Seq[
-    (
-        String,
-        String => Option[String],
-        Seq[String] => Seq[String]
-    )
-  ] = Seq(
-    ("Entrez votre prénom", _ => None, _ => Seq(user.firstName)),
-    ("Entrez votre nom", _ => None, _ => user.lastName.toSeq),
-    (
-      "Entrez votre date de naissance (jj/mm/aaaa)",
-      checkBirthDate,
-      _ => Seq()
-    ),
-    ("Entrez votre ville de naissance", _ => None, _ => Seq()),
-    (
-      "Entrez votre adresse de résidence sans le code postal ni la ville",
-      _ => None,
-      _ => Seq()
-    ),
-    ("Entrez votre code postal", checkZipCode, _ => Seq()),
-    (
-      "Entrez votre ville",
-      _ => None,
-      data => citiesFromZipCode(data.last)
-    )
-  )
+  private[this] val initialData =
+    new IncompletePersonalData(Some(user.firstName), user.lastName)
 
   // Start by requesting stored data about the user. We treat an error
   // from the database as the absence of the document; the consequence is
@@ -174,7 +143,7 @@ private class ChatterBot(
     sendText(
       "Collecte des données personnelles - vous pourrez les effacer en refaisant /start et contrôler ce qui est connu en utilisant /data"
     )
-    requestData(Seq())
+    requestData(initialData)
   }
 
   /**
@@ -184,14 +153,13 @@ private class ChatterBot(
     * @return the behavior to handle user input
     */
   private[this] def requestData(
-      textualData: Seq[String]
+      partialData: IncompletePersonalData
   ): Behavior[ChatterBotControl] = {
-    val (fieldText, checker, fieldProposal) = fields(
-      textualData.length
-    )
+    val (fieldText, fieldSuggestions, fieldSetter) =
+      partialData.firstMissingField.get
     sendText(
       fieldText,
-      Seq(fieldProposal(textualData)) // All proposals on one raw
+      Seq(fieldSuggestions) // All proposals on one raw
     )
     Behaviors.receiveMessage[ChatterBotControl] {
       case CachedData(_) | NoCachedData =>
@@ -201,43 +169,28 @@ private class ChatterBot(
       case FromMainBot(PrivateCommand("start", _)) => handleStart()
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
-        requestData(textualData)
+        requestData(partialData)
       case FromMainBot(PrivateCommand("data", _)) =>
-        if (textualData.isEmpty) {
-          sendText(
-            s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
-          )
-        } else {
-          sendText(
-            ((s"À ce stade, je connais votre numéro unique Telegram (${user.id}), et vous avez rentré " + "les informations partielles suivantes (non encore stockées dans la base de données) :") +: textualData)
-              .mkString("\n- ")
-          )
-        }
-        requestData(textualData)
+        sendText(
+          s"À ce stade, je connais les informations suivantes (non stockées) :\n$partialData\n- Numéro unique Telegram : ${user.id}"
+        )
+        requestData(partialData)
       case FromMainBot(PrivateCommand("help", _)) =>
         help()
-        requestData(textualData)
+        requestData(partialData)
       case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
         )
-        requestData(textualData)
+        requestData(partialData)
       case FromMainBot(PrivateMessage(text)) =>
-        checker(text) match {
+        fieldSetter(text) match {
           case Some(errorMsg) =>
             sendText(errorMsg)
-            requestData(textualData)
+            requestData(partialData)
           case None =>
-            if (textualData.length + 1 == fields.length) {
-              val data = PersonalData(
-                textualData(1),
-                textualData.head,
-                parseBirthDate(textualData(2)),
-                textualData(3),
-                textualData(4),
-                textualData(5),
-                text
-              )
+            if (partialData.isComplete) {
+              val data = partialData.toPersonalData
               sendText(
                 "Vous avez saisi les informations suivantes :\n" + formatData(
                   user,
@@ -250,18 +203,14 @@ private class ChatterBot(
               )
               offerCommands(data)
             } else {
-              requestData(textualData :+ text)
+              requestData(partialData)
             }
         }
       case FromMainBot(AnnounceShutdown(reason)) =>
-        val msg = if (textualData.isEmpty) {
-          s"Cette conversation est momentanément stoppée en raison $reason. Vous pouvez la reprendre " +
-            s"à tout moment en utilisant la commande /start."
-        } else {
+        val msg =
           s"En raison $reason la collecte de données est interrompue et les données transmises jusqu'à " +
             "présent ne seront pas sauvegardées. Vous pouvez recommencer la collecte à tout moment en utilisant " +
             "la commande /start."
-        }
         sendText(msg)
         // Wait for 100 milliseconds before stopping
         Behaviors
@@ -339,6 +288,10 @@ private class ChatterBot(
           )
         )
         Behaviors.same
+      case FromMainBot(PrivateCommand("i", Seq())) =>
+        requestData(IncompletePersonalData.forgetIdentity(data, user.firstName, user.lastName))
+      case FromMainBot(PrivateCommand("l", Seq())) =>
+        requestData(IncompletePersonalData.forgetAddress(data))
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
@@ -538,68 +491,6 @@ object ChatterBot {
   private case class CachedData(data: PersonalData) extends ChatterBotControl
   private case object NoCachedData extends ChatterBotControl
 
-  /**
-    * Parse a textual date and return a plausible one. Any year in [0, 20] will
-    * be added 2000 to it, and any year in [21, 99] will be added 1900 to it.
-    * Of course it is best to supply the full year.
-    * @param text the date to parse
-    * @return a plausible date
-    */
-  def parseBirthDate(text: String): LocalDate = {
-    val date = LocalDate.parse(
-      text,
-      DateTimeFormatter
-        .ofPattern("d/M/u")
-        .withResolverStyle(ResolverStyle.STRICT)
-    )
-    if (date.getYear <= 20) {
-      date.plusYears(2000)
-    } else if (date.getYear <= 100) {
-      date.plusYears(1900)
-    } else {
-      date
-    }
-  }
-
-  /**
-    * Check that a birth date is at the right format.
-    *
-    * @param text the birth date
-    * @return the error message to display if the date is invalid
-    */
-  def checkBirthDate(text: String): Option[String] = {
-    Try(parseBirthDate(text)) match {
-      case Success(date) =>
-        if (date.isAfter(LocalDate.now())) {
-          Some(
-            "Je doute que vous soyez né(e) dans le futur, merci de saisir une date plausible"
-          )
-        } else if (date.isBefore(LocalDate.now().minusYears(110))) {
-          Some(
-            "À plus de 110 ans il n'est pas prudent de sortir, merci de saisir une date plausible"
-          )
-        } else {
-          None
-        }
-      case Failure(_) =>
-        Some("Date non reconnue, veuillez la ressaisir au format attendu")
-    }
-  }
-
-  /**
-    * Check that the zip code is at the right format.
-    *
-    * @param text the zip code
-    * @return the error message to display if the zip code is invalid
-    */
-  private def checkZipCode(text: String): Option[String] = {
-    Try(Integer.parseInt(text)) match {
-      case Success(_) => None
-      case Failure(_) =>
-        Some("Format de code postal non reconnu, veuillez le ressaisir")
-    }
-  }
-
   private def makeButtons(reasons: Seq[String]): Seq[Seq[String]] = {
     val latestReasons =
       Authorization
@@ -682,9 +573,6 @@ object ChatterBot {
        |- Adresse de résidence : ${data.street} ${data.zip} ${data.city}
        |- Numéro unique Telegram : ${user.id}
        |""".stripMargin
-
-  private def citiesFromZipCode(zipCode: String): Seq[String] =
-    ZipCodes.fromZipCodes.get(zipCode).map(_.sorted).getOrElse(Seq())
 
   /**
     * Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
