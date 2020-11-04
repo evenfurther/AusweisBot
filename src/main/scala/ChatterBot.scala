@@ -289,8 +289,10 @@ private class ChatterBot(
         )
         Behaviors.same
       case FromMainBot(PrivateCommand("i", Seq())) =>
+        db ! DBProtocol.Delete(user.id)
         requestData(IncompletePersonalData.forgetIdentity(data, user.firstName, user.lastName))
       case FromMainBot(PrivateCommand("l", Seq())) =>
+        db ! DBProtocol.Delete(user.id)
         requestData(IncompletePersonalData.forgetAddress(data))
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
