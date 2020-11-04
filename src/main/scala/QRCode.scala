@@ -59,6 +59,6 @@ object QRCode {
        |Naissance: ${data.birthDateText} a ${data.birthPlace}
        |Adresse: ${data.street} ${data.zip} ${data.city}
        |Sortie: ${dateText(auth.output)} a ${timeText(auth.output)}
-       |Motifs: $reasons""".stripMargin.linesIterator.mkString(";\n ")
+       |Motifs: $reasons""".stripMargin.linesIterator.mkString(";\n") + ";\n"
   }
 }

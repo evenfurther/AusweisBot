@@ -62,7 +62,7 @@ object PDFBuilder {
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _) =>
-              addText(content, 84, y, "x", 18)
+              addText(content, 78, y, "x", 18)
           }
         }
       }
