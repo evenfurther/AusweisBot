@@ -36,8 +36,8 @@ class QRCodeSpec extends Specification {
   "buildContent" should {
     "generate the expected content" in {
       val data = PersonalData(
-        "Doe",
         "John",
+        "Doe",
         LocalDate.of(1970, 2, 3),
         "Montélimar",
         "1 rue de la Paix",
@@ -56,8 +56,8 @@ class QRCodeSpec extends Specification {
 
     "generate a content similar to the official site" in {
       val data = PersonalData(
-        "Doe",
         "John",
+        "Doe",
         LocalDate.of(1970, 2, 1),
         "Paris 13",
         "1 rue de la paix",

@@ -19,6 +19,11 @@ La liste des motifs utilisables est :
 
 REASONS
 
+Les commandes suivantes sont expérimentales, moins bien testées et ne sont pas destinées à un large public :
+
+- `/i` : Permet de changer l'identité en conservant l'adresse actuelle
+- `/l` : Permet de changer l'adresse en conservant l'identité actuelle
+
 Telegram ne transmettant pas le fuseau horaire dans lequel se trouve l'utilisateur, la génération des attestations sans heure explicite ne fonctionne que pour la France métropolitaine.
 
 __Attention__ : la faculté de choisir l'heure sur l'attestation, comme c'est le cas sur l'attestation papier, n'autorise pas à s'affranchir des prescriptions en matière de temps de sortie maximum autorisé par jour. De même, il n'est pas clair que l'utilisation de plusieurs motifs simultanément (par exemple famille+santé) soit réglementaire.

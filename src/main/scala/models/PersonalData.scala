@@ -4,10 +4,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import play.api.libs.json._
+import scala.util.{Failure, Success, Try}
 
 case class PersonalData(
-    lastName: String,
     firstName: String,
+    lastName: String,
     birthDate: LocalDate,
     birthPlace: String,
     street: String,
