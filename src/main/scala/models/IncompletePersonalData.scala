@@ -5,8 +5,8 @@ import java.time.format.{DateTimeFormatter, ResolverStyle}
 import scala.util.{Failure, Success, Try}
 
 class IncompletePersonalData(
-    suggestedFirstName: Option[String],
-    suggestedLastName: Option[String],
+    var suggestedFirstName: Option[String],
+    var suggestedLastName: Option[String],
     var firstName: Option[String] = None,
     var lastName: Option[String] = None,
     var birthDate: Option[LocalDate] = None,
@@ -87,6 +87,30 @@ class IncompletePersonalData(
         city = Some(s); None
       }))
     else None
+
+  /**
+    * Strip the identity and keep the rest
+    *
+    * @param suggFirstName a suggestion for the first name
+    * @param suggLastName a suggestion for the last name
+    */
+  def stripIdentity(suggFirstName: String, suggLastName: Option[String]) {
+      suggestedFirstName = Some(suggFirstName)
+      suggestedLastName = suggLastName
+      firstName = None
+      lastName = None
+      birthDate = None
+      birthPlace = None
+  }
+
+  /**
+    * Strip the address and keep the rest
+    */
+  def stripAddress() {
+      street = None
+      zip = None
+      city = None
+  }
 
   /**
     * Build personal data from complete incomplete data

@@ -178,6 +178,12 @@ private class ChatterBot(
       case FromMainBot(PrivateCommand("help", _)) =>
         help()
         requestData(partialData)
+      case FromMainBot(PrivateCommand("i", Seq())) =>
+        partialData.stripIdentity(user.firstName, user.lastName)
+        requestData(partialData)
+      case FromMainBot(PrivateCommand("l", Seq())) =>
+        partialData.stripAddress()
+        requestData(partialData)
       case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
