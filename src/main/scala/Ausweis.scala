@@ -162,7 +162,7 @@ object Ausweis extends App {
         ) // Main bot.
         .withThrottling(
           FiniteDuration(
-            ausweisConfig.getDuration("interrequest-delay").toNanos,
+            ausweisConfig.getDuration("inter-request-delay").toNanos,
             TimeUnit.NANOSECONDS
           ),
           ausweisConfig.getInt("max-queued-requests")
