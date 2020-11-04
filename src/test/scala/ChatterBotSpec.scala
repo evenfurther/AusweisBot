@@ -152,6 +152,7 @@ class ChatterBotSpec extends Specification {
     "be able to update identity" in new WithTestKit {
       withDatabaseEntry()
       sendCommand("i")
+      db.expectMessage(Delete(42))
       val mod = modelData.copy(
         firstName = "Sylvie",
         lastName = "Martin",
@@ -165,6 +166,7 @@ class ChatterBotSpec extends Specification {
     "be able to update location" in new WithTestKit {
       withDatabaseEntry()
       sendCommand("l")
+      db.expectMessage(Delete(42))
       val mod = modelData.copy(
         street = "10 rue du moulin",
         zip = "75013",
