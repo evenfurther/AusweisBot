@@ -42,10 +42,10 @@ object Ausweis extends App {
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
       .map {
-        case ((reason, aliases), i) =>
+        case ((reason, aliases, help), i) =>
           s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
             s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
-          else ""}"
+          else ""} - $help"
       }
       .mkString("\n")
     IOUtils
