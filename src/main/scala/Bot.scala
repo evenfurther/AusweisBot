@@ -206,7 +206,13 @@ object Bot {
   private def parseText(
       text: String
   ): PerChatBotCommand = {
-    val normalizedText = Normalizer.normalize(text, Normalizer.Form.NFC)
+    // The Telegram client sends unicode test in any form. We use NFC
+    // because more accented characters are thus accepted in the PDF.
+    // Also, because most Telegram clients automatically transform
+    // "--" into "—" (a long dash), we do the reverse transformation
+    // because it is used in some French names.
+    val normalizedText =
+      Normalizer.normalize(text, Normalizer.Form.NFC).replace("—", "--")
     if (normalizedText.startsWith("/")) {
       val words = normalizedText.split(' ')
       PrivateCommand(words.head.substring(1), words.toSeq.tail)
