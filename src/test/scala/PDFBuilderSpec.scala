@@ -3,6 +3,7 @@ import models.{Authorization, PersonalData}
 import java.time.{LocalDate, LocalDateTime}
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.specs2.matcher.Matcher
+import scala.util.{Failure, Try}
 
 class PDFBuilderSpec extends Specification {
 
@@ -39,10 +40,11 @@ class PDFBuilderSpec extends Specification {
     }
 
     "throw on non-textual characters such as emojis" in {
-      val d = data.copy(birthPlace = "😊")
-      PDFBuilder.buildPDF(d, Some(auth)) should throwAn[
-        IllegalArgumentException
-      ]
+      val birthPlace = "ABC😊DEF"
+      val d = data.copy(birthPlace = birthPlace)
+      Try { PDFBuilder.buildPDF(d, Some(auth)) } should beEqualTo(
+        Failure(PDFBuilder.NonPrintable(birthPlace))
+      )
     }
 
     "return an empty model if requested" in {

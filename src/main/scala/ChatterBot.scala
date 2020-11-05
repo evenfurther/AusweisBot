@@ -188,6 +188,11 @@ private class ChatterBot(
         )
         requestData(dataBuilder)
       case FromMainBot(PrivateMessage(text)) =>
+        if (!utils.isAcceptableString(text))
+          sendText(
+            "Attention, un ou plusieurs caractères non alphabétiques risquent d'empêcher par la suite " +
+              "la génération du PDF de l'attestation"
+          )
         fieldSetter(text) match {
           case Left(errorMsg) =>
             sendText(errorMsg)
@@ -321,6 +326,16 @@ private class ChatterBot(
         )
         debugActor.foreach(
           _ ! s"Timeout for receiving PDF document for ${data.firstName} ${data.lastName}"
+        )
+        offerCommands(data)
+      case PDFFailure(PDFBuilder.NonPrintable(text)) =>
+        sendText(
+          s"Impossible de générer une attestation car « $text » n'est pas imprimable " +
+            "dans la police de caractères utilisée par l'administration dans le document. " +
+            "Veuillez ressaisir des données en utilisant uniquement l'alphabet courant."
+        )
+        debugActor.foreach(
+          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: unprintable string $text"
         )
         offerCommands(data)
       case PDFFailure(e) =>

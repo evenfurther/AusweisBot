@@ -9,7 +9,7 @@ import com.bot4s.telegram.models.{ChatId, User}
 import models.DBProtocol.{DBCommand, Delete, Load, Save}
 import models.{Authorization, PersonalData}
 import org.specs2.mutable._
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 class ChatterBotSpec extends Specification {
 
@@ -60,9 +60,9 @@ class ChatterBotSpec extends Specification {
       }
     }
 
-    def withDatabaseEntry(): Unit = {
+    def withDatabaseEntry(data: PersonalData = modelData): Unit = {
       db.expectMessageType[Load] match {
-        case Load(42, replyTo) => replyTo ! Some(modelData)
+        case Load(42, replyTo) => replyTo ! Some(data)
         case _                 => failure
       }
     }
@@ -174,6 +174,30 @@ class ChatterBotSpec extends Specification {
       )
       sendMessages(mod.street, mod.zip, mod.city)
       db.expectMessage(Save(42, mod))
+    }
+
+    "warn if suspicious characters (e.g., emojis) are used" in new WithTestKit {
+      withNoDatabaseEntry()
+      sendCommand("start")
+      outgoing.expectMessageType[SendText]
+      outgoing.expectMessageType[SendText]
+      sendMessage("ABCDE😊FGH")
+      outgoing.expectMessageType[SendText].text must contain(
+        "non alphabétiques"
+      )
+    }
+
+    "explain what the problem is on PDF generation problem" in new WithTestKit {
+      val badCity = "ABCDE😊FGH"
+      withDatabaseEntry(modelData.copy(city = badCity))
+      sendCommand("autre", Seq("travail"))
+      pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
+        case PDFBuilder.BuildPDF(data, auth, replyTo) =>
+          replyTo ! Failure(PDFBuilder.NonPrintable(badCity))
+      }
+      outgoing
+        .expectMessageType[SendText]
+        .text must contain("Impossible") and contain(badCity)
     }
   }
 
