@@ -106,7 +106,12 @@ object PDFBuilder {
       content.showText(text)
     } catch {
       case _: IllegalArgumentException =>
-        content.showText(StringUtils.stripAccents(text))
+        try {
+          content.showText(StringUtils.stripAccents(text))
+        } catch {
+          case _: IllegalArgumentException =>
+            throw NonPrintable(text)
+        }
     }
     content.endText()
   }
@@ -142,5 +147,7 @@ object PDFBuilder {
     info.setAuthor("Ministère de l'intérieur")
     doc.setVersion(1.7f)
   }
+
+  case class NonPrintable(s: String) extends Exception(s)
 
 }
