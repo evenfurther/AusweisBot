@@ -159,3 +159,12 @@ $ docker-compose up -d
 
 Dans ce cas, vous n'avez besoin de rien d'autre que le fichier `.env` que vous avez créé
 et le fichier `docker-compose.yml` se trouvant à la racine du dépôt.
+
+### Gérer la liste des commandes pour BotFather
+
+La liste des commandes à donner à BotFather pour générer la complétion automatique peut
+être générée en faisant à l'aide :
+
+- soit de `sbt genCommands` lorsqu'on compile depuis les sources, qui générera un fichier
+  `commands.txt` dans le répertoire courant ;
+- soit de la commande `docker run --rm rfc1149/ausweisbot java -jar ausweis.jar --gen-commands` pour les utilisateurs de Docker
