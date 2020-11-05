@@ -24,82 +24,88 @@ case class PersonalDataBuilder(
     *
     * @return true if all fields have been fields
     */
-  def isComplete =
+  private def isComplete =
     firstName.isDefined && lastName.isDefined && birthDate.isDefined && birthPlace.isDefined && street.isDefined && zip.isDefined && city.isDefined
 
+  private def consolidate =
+    if (isComplete) Right(toPersonalData) else Left(this)
+
   /**
-    * Information about the first missing field if any:
+    * Information about the first missing field:
     *   - the prompt
     *   - the options to present to the user
-    *   - the function to call to enter the information, returns either the modified data or error
+    *   - the function to call to enter the information, returns either the complete data,
+    *     the builder, or the error
     *
     * @return
     */
-  def firstMissingField: Option[
-    (String, Seq[String], String => Either[String, PersonalDataBuilder])
-  ] =
+  def firstMissingField: (
+      String,
+      Seq[String],
+      String => Either[String, Either[PersonalDataBuilder, PersonalData]]
+  ) =
     if (firstName.isEmpty)
-      Some(
-        ("Entrez votre prénom", suggestedFirstName.toSeq, s => {
-          Right(copy(firstName = Some(s)))
-        })
-      )
+      ("Entrez votre prénom", suggestedFirstName.toSeq, s => {
+        Right(copy(firstName = Some(s)).consolidate)
+      })
     else if (lastName.isEmpty)
-      Some(("Entrez votre nom", suggestedLastName.toSeq, s => {
-        Right(copy(lastName = Some(s)))
-      }))
+      ("Entrez votre nom", suggestedLastName.toSeq, s => {
+        Right(copy(lastName = Some(s)).consolidate)
+      })
     else if (birthDate.isEmpty)
-      Some(
-        (
-          "Entrez votre date de naissance (jj/mm/aaaa)",
-          Seq(),
-          s =>
-            checkBirthDate(s) match {
-              case Some(error) => Left(error)
-              case None        => Right(copy(birthDate = Some(parseBirthDate(s))))
-            }
-        )
+      (
+        "Entrez votre date de naissance (jj/mm/aaaa)",
+        Seq(),
+        s =>
+          checkBirthDate(s) match {
+            case Some(error) => Left(error)
+            case None =>
+              Right(copy(birthDate = Some(parseBirthDate(s))).consolidate)
+          }
       )
     else if (birthPlace.isEmpty)
-      Some(("Entrez votre ville de naissance", Seq(), s => {
-        Right(copy(birthPlace = Some(s)))
-      }))
+      ("Entrez votre ville de naissance", Seq(), s => {
+        Right(copy(birthPlace = Some(s)).consolidate)
+      })
     else if (street.isEmpty)
-      Some(
-        (
-          "Entrez votre adresse de résidence sans le code postal ni la ville",
-          Seq(),
-          s => Right(copy(street = Some(s)))
-        )
+      (
+        "Entrez votre adresse de résidence sans le code postal ni la ville",
+        Seq(),
+        s => Right(copy(street = Some(s)).consolidate)
       )
     else if (zip.isEmpty)
-      Some(
-        (
-          "Entrez votre code postal",
-          Seq(),
-          s =>
-            checkZipCode(s) match {
-              case Some(error) => Left(error)
-              case None        => Right(copy(zip = Some(s)))
-            }
-        )
+      (
+        "Entrez votre code postal",
+        Seq(),
+        s =>
+          checkZipCode(s) match {
+            case Some(error) => Left(error)
+            case None        => Right(copy(zip = Some(s)).consolidate)
+          }
       )
     else if (city.isEmpty)
-      Some(("Entrez votre ville", citiesFromZipCode(zip.get), s => {
-        Right(copy(city = Some(s)))
-      }))
-    else None
+      ("Entrez votre ville", citiesFromZipCode(zip.get), s => {
+        Right(copy(city = Some(s)).consolidate)
+      })
+    else
+      throw new IllegalStateException(
+        "A PersonalDataBuilder should not be used when it is complete"
+      )
 
   /**
     * Strip the identity and keep the rest. The previous identity will be kept
     * as suggestion if possible.
+    * @param fn A new first name suggestion
+    * @param ln A new last name suggestion
     */
-  def stripIdentity =
+  private def stripIdentity(fn: String, ln: Option[String]) =
     copy(
-      suggestedFirstName =
-        sortUnique(firstName +: suggestedFirstName.map(s => Some(s)): _*),
-      suggestedLastName =
-        sortUnique(lastName +: suggestedLastName.map(s => Some(s)): _*),
+      suggestedFirstName = sortUnique(
+        Seq(firstName, Some(fn)) ++ suggestedFirstName.map(s => Some(s)): _*
+      ),
+      suggestedLastName = sortUnique(
+        Seq(lastName, ln) ++ suggestedLastName.map(s => Some(s)): _*
+      ),
       firstName = None,
       lastName = None,
       birthDate = None,
@@ -109,7 +115,20 @@ case class PersonalDataBuilder(
   /**
     * Strip the address and keep the rest
     */
-  def stripAddress = copy(street = None, zip = None, city = None)
+  private def stripAddress = copy(street = None, zip = None, city = None)
+
+  def strip(
+      strip: StrippedProperty,
+      suggestedFirstName: String,
+      suggestedLastName: Option[String]
+  ) = strip match {
+    case StripAddress =>
+      stripAddress
+    case StripBoth =>
+      stripIdentity(suggestedFirstName, suggestedLastName).stripAddress
+    case StripIdentity =>
+      stripIdentity(suggestedFirstName, suggestedLastName)
+  }
 
   /**
     * Build personal data from complete incomplete data
@@ -144,20 +163,12 @@ case class PersonalDataBuilder(
 
 object PersonalDataBuilder {
 
-  /**
-    * Make builder from personal data.
-    *
-    * @param data the original data
-    * @return a data builder
-    */
-  def apply(
-      data: PersonalData,
-      suggestedFirstName: String,
-      suggestedLastName: Option[String]
+  private def fromData(
+      data: PersonalData
   ): PersonalDataBuilder =
     PersonalDataBuilder(
-      sortUnique(Some(data.firstName), Some(suggestedFirstName)),
-      sortUnique(Some(data.lastName), suggestedLastName),
+      Seq(),
+      Seq(),
       Some(data.firstName),
       Some(data.lastName),
       Some(data.birthDate),
@@ -166,6 +177,22 @@ object PersonalDataBuilder {
       Some(data.zip),
       Some(data.city)
     )
+
+  /**
+    * Make builder from personal data.
+    *
+    * @param data the original data
+    * @param suggestedFirstName the suggested first name
+    * @param suggestedLastName the suggested last name
+    * @param strip the data to strip
+    * @return a data builder
+    */
+  def apply(
+      data: PersonalData,
+      suggestedFirstName: String,
+      suggestedLastName: Option[String],
+      strip: StrippedProperty
+  ) = fromData(data).strip(strip, suggestedFirstName, suggestedLastName)
 
   def apply(
       suggestedFirstName: String,
@@ -252,4 +279,9 @@ object PersonalDataBuilder {
     choices.flatten.toSet.toSeq
       .filter(s => StringUtils.isAlphanumericSpace(s))
       .sorted
+
+  sealed trait StrippedProperty
+  case object StripAddress extends StrippedProperty
+  case object StripBoth extends StrippedProperty
+  case object StripIdentity extends StrippedProperty
 }

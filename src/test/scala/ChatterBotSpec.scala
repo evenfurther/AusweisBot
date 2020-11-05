@@ -163,9 +163,9 @@ class ChatterBotSpec extends Specification {
       db.expectMessage(Save(42, mod))
     }
 
-    "be able to update location" in new WithTestKit {
+    "be able to update address" in new WithTestKit {
       withDatabaseEntry()
-      sendCommand("l")
+      sendCommand("a")
       db.expectMessage(Delete(42))
       val mod = modelData.copy(
         street = "10 rue du moulin",
