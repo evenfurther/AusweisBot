@@ -13,6 +13,7 @@ import com.bot4s.telegram.methods.ParseMode.ParseMode
 import com.bot4s.telegram.models._
 import models.DBProtocol.DBCommand
 import models.{Authorization, DBProtocol, PersonalData, PersonalDataBuilder}
+import models.PersonalDataBuilder.{StripAddress, StripBoth, StripIdentity}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -156,7 +157,7 @@ private class ChatterBot(
       dataBuilder: PersonalDataBuilder
   ): Behavior[ChatterBotControl] = {
     val (fieldText, fieldSuggestions, fieldSetter) =
-      dataBuilder.firstMissingField.get
+      dataBuilder.firstMissingField
     sendText(
       fieldText,
       Seq(fieldSuggestions) // All proposals on one raw
@@ -167,7 +168,7 @@ private class ChatterBot(
           .warn(s"Database result for user ${user.id} arrived too late")
         Behaviors.same
       case FromMainBot(PrivateCommand("start", _)) =>
-        handleStart(dataBuilder.stripIdentity.stripAddress)
+        handleStart(dataBuilder.strip(StripBoth, user.firstName, user.lastName))
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         requestData(dataBuilder)
@@ -180,9 +181,13 @@ private class ChatterBot(
         help()
         requestData(dataBuilder)
       case FromMainBot(PrivateCommand("i", Seq())) =>
-        requestData(dataBuilder.stripIdentity)
-      case FromMainBot(PrivateCommand("l", Seq())) =>
-        requestData(dataBuilder.stripAddress)
+        requestData(
+          dataBuilder.strip(StripIdentity, user.firstName, user.lastName)
+        )
+      case FromMainBot(PrivateCommand("a", Seq())) =>
+        requestData(
+          dataBuilder.strip(StripAddress, user.firstName, user.lastName)
+        )
       case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
@@ -198,23 +203,20 @@ private class ChatterBot(
           case Left(errorMsg) =>
             sendText(errorMsg)
             requestData(dataBuilder)
-          case Right(dataBuilder) =>
-            if (dataBuilder.isComplete) {
-              val data = dataBuilder.toPersonalData
-              sendText(
-                "Vous avez saisi les informations suivantes :\n" + formatData(
-                  user,
-                  data
-                ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir " + "utiliser les commandes pour générer des attestations. Envoyez " + "/help pour obtenir de l'aide sur les commandes disponibles."
-              )
-              db ! DBProtocol.Save(user.id, data)
-              debugActor.foreach(
-                _ ! s"Inserting data for ${data.firstName} ${data.lastName}"
-              )
-              offerCommands(data)
-            } else {
-              requestData(dataBuilder)
-            }
+          case Right(Right(data)) =>
+            sendText(
+              "Vous avez saisi les informations suivantes :\n" + formatData(
+                user,
+                data
+              ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir " + "utiliser les commandes pour générer des attestations. Envoyez " + "/help pour obtenir de l'aide sur les commandes disponibles."
+            )
+            db ! DBProtocol.Save(user.id, data)
+            debugActor.foreach(
+              _ ! s"Inserting data for ${data.firstName} ${data.lastName}"
+            )
+            offerCommands(data)
+          case Right(Left(dataBuilder)) =>
+            requestData(dataBuilder)
         }
       case FromMainBot(AnnounceShutdown(reason)) =>
         val msg =
@@ -281,10 +283,10 @@ private class ChatterBot(
       case FromMainBot(PrivateCommand("start", _)) =>
         db ! DBProtocol.Delete(user.id)
         sendText(
-          "Toutes vos données personnelles ont été définitivement supprimées de la base de donnée"
+          "Toutes vos données personnelles ont été définitivement supprimées de la base de données"
         )
         handleStart(
-          PersonalDataBuilder(data, user.firstName, user.lastName).stripAddress.stripIdentity
+          PersonalDataBuilder(data, user.firstName, user.lastName, StripBoth)
         )
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
@@ -303,12 +305,17 @@ private class ChatterBot(
       case FromMainBot(PrivateCommand("i", Seq())) =>
         db ! DBProtocol.Delete(user.id)
         requestData(
-          PersonalDataBuilder(data, user.firstName, user.lastName).stripIdentity
+          PersonalDataBuilder(
+            data,
+            user.firstName,
+            user.lastName,
+            StripIdentity
+          )
         )
-      case FromMainBot(PrivateCommand("l", Seq())) =>
+      case FromMainBot(PrivateCommand("a", Seq())) =>
         db ! DBProtocol.Delete(user.id)
         requestData(
-          PersonalDataBuilder(data, user.firstName, user.lastName).stripAddress
+          PersonalDataBuilder(data, user.firstName, user.lastName, StripAddress)
         )
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
