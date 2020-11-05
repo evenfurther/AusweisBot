@@ -76,7 +76,7 @@ private class ChatterBot(
     )
   }
 
-  private[this] val initialData =
+  private[this] def initialData =
     new IncompletePersonalData(Some(user.firstName), user.lastName)
 
   // Start by requesting stored data about the user. We treat an error
@@ -296,7 +296,10 @@ private class ChatterBot(
         Behaviors.same
       case FromMainBot(PrivateCommand("i", Seq())) =>
         db ! DBProtocol.Delete(user.id)
-        requestData(IncompletePersonalData.forgetIdentity(data, user.firstName, user.lastName))
+        requestData(
+          IncompletePersonalData
+            .forgetIdentity(data, user.firstName, user.lastName)
+        )
       case FromMainBot(PrivateCommand("l", Seq())) =>
         db ! DBProtocol.Delete(user.id)
         requestData(IncompletePersonalData.forgetAddress(data))
