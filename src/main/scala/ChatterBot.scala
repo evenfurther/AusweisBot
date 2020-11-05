@@ -76,9 +76,6 @@ private class ChatterBot(
     )
   }
 
-  private[this] def initialData =
-    PersonalDataBuilder(user.firstName, user.lastName)
-
   // Start by requesting stored data about the user. We treat an error
   // from the database as the absence of the document; the consequence is
   // that the user will have to re-enter the information again and no important
@@ -105,7 +102,7 @@ private class ChatterBot(
         case NoCachedData =>
           buffer.unstashAll(Behaviors.receiveMessage {
             case FromMainBot(PrivateCommand("start", _)) =>
-              handleStart()
+              handleStart(PersonalDataBuilder(user.firstName, user.lastName))
             case FromMainBot(PrivateCommand("privacy", _)) =>
               privacyPolicy()
               Behaviors.same
@@ -137,13 +134,16 @@ private class ChatterBot(
     * Common handler for the `/start` function. When we arrive here, either we previously didn't find data
     * about the user in the database or the data was explicitely deleted using the `/start` command.
     *
+    * @param dataBuilder the initial data to start from
     * @return the `requestData` behavior with empty data
     */
-  private[this] def handleStart(): Behavior[ChatterBotControl] = {
+  private[this] def handleStart(
+      dataBuilder: PersonalDataBuilder
+  ): Behavior[ChatterBotControl] = {
     sendText(
       "Collecte des données personnelles - vous pourrez les effacer en refaisant /start et contrôler ce qui est connu en utilisant /data"
     )
-    requestData(initialData)
+    requestData(dataBuilder)
   }
 
   /**
@@ -166,7 +166,8 @@ private class ChatterBot(
         context.log
           .warn(s"Database result for user ${user.id} arrived too late")
         Behaviors.same
-      case FromMainBot(PrivateCommand("start", _)) => handleStart()
+      case FromMainBot(PrivateCommand("start", _)) =>
+        handleStart(dataBuilder.stripIdentity.stripAddress)
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         requestData(dataBuilder)
@@ -282,7 +283,9 @@ private class ChatterBot(
         sendText(
           "Toutes vos données personnelles ont été définitivement supprimées de la base de donnée"
         )
-        handleStart()
+        handleStart(
+          PersonalDataBuilder(data, user.firstName, user.lastName).stripAddress.stripIdentity
+        )
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         Behaviors.same
@@ -299,10 +302,14 @@ private class ChatterBot(
         Behaviors.same
       case FromMainBot(PrivateCommand("i", Seq())) =>
         db ! DBProtocol.Delete(user.id)
-        requestData(PersonalDataBuilder(data).stripIdentity)
+        requestData(
+          PersonalDataBuilder(data, user.firstName, user.lastName).stripIdentity
+        )
       case FromMainBot(PrivateCommand("l", Seq())) =>
         db ! DBProtocol.Delete(user.id)
-        requestData(PersonalDataBuilder(data).stripAddress)
+        requestData(
+          PersonalDataBuilder(data, user.firstName, user.lastName).stripAddress
+        )
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same

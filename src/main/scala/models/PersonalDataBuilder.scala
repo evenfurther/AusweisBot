@@ -3,10 +3,11 @@ package models
 import java.time.LocalDate
 import java.time.format.{DateTimeFormatter, ResolverStyle}
 import scala.util.{Failure, Success, Try}
+import org.apache.commons.lang3.StringUtils
 
 case class PersonalDataBuilder(
-    suggestedFirstName: Option[String],
-    suggestedLastName: Option[String],
+    suggestedFirstName: Seq[String],
+    suggestedLastName: Seq[String],
     firstName: Option[String],
     lastName: Option[String],
     birthDate: Option[LocalDate],
@@ -95,8 +96,10 @@ case class PersonalDataBuilder(
     */
   def stripIdentity =
     copy(
-      suggestedFirstName = firstName orElse suggestedFirstName,
-      suggestedLastName = lastName orElse suggestedLastName,
+      suggestedFirstName =
+        sortUnique(firstName +: suggestedFirstName.map(s => Some(s)): _*),
+      suggestedLastName =
+        sortUnique(lastName +: suggestedLastName.map(s => Some(s)): _*),
       firstName = None,
       lastName = None,
       birthDate = None,
@@ -147,10 +150,14 @@ object PersonalDataBuilder {
     * @param data the original data
     * @return a data builder
     */
-  def apply(data: PersonalData): PersonalDataBuilder =
+  def apply(
+      data: PersonalData,
+      suggestedFirstName: String,
+      suggestedLastName: Option[String]
+  ): PersonalDataBuilder =
     PersonalDataBuilder(
-      Some(data.firstName),
-      Some(data.lastName),
+      sortUnique(Some(data.firstName), Some(suggestedFirstName)),
+      sortUnique(Some(data.lastName), suggestedLastName),
       Some(data.firstName),
       Some(data.lastName),
       Some(data.birthDate),
@@ -165,8 +172,8 @@ object PersonalDataBuilder {
       suggestedLastName: Option[String]
   ): PersonalDataBuilder =
     PersonalDataBuilder(
-      Some(suggestedFirstName),
-      suggestedLastName,
+      sortUnique(Some(suggestedFirstName)),
+      sortUnique(suggestedLastName),
       None,
       None,
       None,
@@ -184,20 +191,6 @@ object PersonalDataBuilder {
     * @return a plausible date
     */
   def parseBirthDate(text: String): LocalDate = {
-    def forgetAddress(data: PersonalData): PersonalDataBuilder = {
-      new PersonalDataBuilder(
-        None,
-        None,
-        Some(data.firstName),
-        Some(data.lastName),
-        Some(data.birthDate),
-        Some(data.birthPlace),
-        None,
-        None,
-        None
-      )
-    }
-
     val date = LocalDate.parse(
       text,
       DateTimeFormatter
@@ -254,4 +247,9 @@ object PersonalDataBuilder {
 
   private def citiesFromZipCode(zipCode: String): Seq[String] =
     ZipCodes.fromZipCodes.get(zipCode).map(_.sorted).getOrElse(Seq())
+
+  private def sortUnique(choices: Option[String]*): Seq[String] =
+    choices.flatten.toSet.toSeq
+      .filter(s => StringUtils.isAlphanumericSpace(s))
+      .sorted
 }
