@@ -61,7 +61,7 @@ object PDFBuilder {
         addText(content, 264, 153, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
-            case (_, y, _) =>
+            case (_, y, _, _) =>
               addText(content, 78, y, "x", 18)
           }
         }

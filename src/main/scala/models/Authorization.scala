@@ -16,52 +16,94 @@ object Authorization {
 
   // Canonical name, position on certificate, aliases, preferred display name if any
   // (otherwise the canonical name will be used).
-  private val data: Seq[(String, Float, Seq[String], Option[String])] = Seq(
-    (
-      "travail",
-      578,
-      Seq(
-        "concours",
-        "examen",
-        "formation",
-        "professionnel",
+  private val data: Seq[(String, Float, Seq[String], Option[String], String)] =
+    Seq(
+      (
+        "travail",
+        578,
+        Seq(
+          "concours",
+          "examen",
+          "formation",
+          "professionnel"
+        ),
+        None,
+        "travail, concours ou examens"
       ),
-      None
-    ),
-    ("achats", 533, Seq(), Some("courses")),
-    ("sante", 477, Seq("soins"), Some("santé")),
-    ("famille", 435, Seq("proches"), None),
-    ("handicap", 396, Seq(), None),
-    (
-      "sport_animaux",
-      358,
-      Seq("sport", "animaux", "sortie"),
-      Some("promenade")
-    ),
-    ("convocation", 295, Seq("administratif", "judiciaire"), None),
-    ("missions", 255, Seq("mission"), None),
-    (
-      "enfants",
-      211,
-      Seq("scolaire", "école", "crèche", "collège", "lycée"),
-      None
+      (
+        "achats",
+        533,
+        Seq(),
+        Some("courses"),
+        "courses ou retrait de marchandises"
+      ),
+      (
+        "sante",
+        477,
+        Seq("soins"),
+        Some("santé"),
+        "rendez-vous de santé ou de soins"
+      ),
+      (
+        "famille",
+        435,
+        Seq("proches"),
+        None,
+        "motif familial impérieux, visite à des personnes vulnérables"
+      ),
+      (
+        "handicap",
+        396,
+        Seq(),
+        None,
+        "assistance aux personnes en situation de handicap"
+      ),
+      (
+        "sport_animaux",
+        358,
+        Seq("sport", "animaux", "sortie"),
+        Some("promenade"),
+        "sport, promenade, besoins des animaux"
+      ),
+      (
+        "convocation",
+        295,
+        Seq("administratif", "judiciaire"),
+        None,
+        "convocation administrative ou judiciaire"
+      ),
+      (
+        "missions",
+        255,
+        Seq("mission"),
+        None,
+        "mission pour le compte d'un service public"
+      ),
+      (
+        "enfants",
+        211,
+        Seq("scolaire", "école", "crèche", "collège", "lycée"),
+        None,
+        "déplacement pour amener ou aller chercher les enfants à leur lien d'éducation ou de garde"
+      )
     )
-  )
 
   /**
     * Dictionary mapping reason and reason aliases (for example "santé" and "promenade" are respective aliases of
     * "sante" and "sport") to their official designation in the QR-code and the Y position in the PDF as well as
-    * a pretty string.
+    * a pretty string and the help string.
     */
-  val reasons: Map[String, (String, Float, String)] =
+  val reasons: Map[String, (String, Float, String, String)] =
     data.flatMap {
-      case (canonical, y, aliases, pretty) => {
+      case (canonical, y, aliases, pretty, help) => {
         val display = pretty getOrElse canonical
         val alternatives: mutable.Set[String] =
           mutable.Set(Seq(canonical, display) ++ aliases: _*)
         for (a <- alternatives)
           alternatives += StringUtils.stripAccents(a)
-        alternatives.toSeq.map(alias => (alias -> (canonical, y, display)))
+        alternatives.toSeq.map(alias =>
+          (alias -> (canonical, y, display, help))
+        )
       }
     }.toMap
 
@@ -100,7 +142,7 @@ object Authorization {
     */
   def orderedCanonicalValidReasons(rs: Seq[String]): Seq[String] = {
     rs.flatMap(reasons.get)
-      .sortBy { case (_, y, _) => -y }
+      .sortBy { case (_, y, _, _) => -y }
       .map(_._1)
   }
 
@@ -113,18 +155,27 @@ object Authorization {
   def prettyReason(reason: String): String = reasons(reason)._3
 
   /**
-    * List of reasons and their aliases, sorted by reason then in
+    * Help string to describe a reason.
+    *
+    * @param reason the reason
+    * @return the help for the reason
+    */
+  def help(reason: String): String = reasons(reason)._4
+
+  /**
+    * List of reasons, their aliases and their help string, sorted by reason then in
     * analphabetical order.
     */
-  val reasonsAndAliases: Seq[(String, Seq[String])] = {
+  val reasonsAndAliases: Seq[(String, Seq[String], String)] = {
     import scala.math.Ordering.Implicits.seqDerivedOrdering
     data
       .sortBy(-_._2)
       .map {
-        case (canonical, _, aliases, pretty) =>
+        case (canonical, _, aliases, pretty, help) =>
           (
             pretty getOrElse canonical,
-            aliases.sortBy(StringUtils.stripAccents)
+            aliases.sortBy(StringUtils.stripAccents),
+            help
           )
       }
   }

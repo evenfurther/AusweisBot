@@ -26,6 +26,20 @@ import java.util.concurrent.TimeUnit
 
 object Ausweis extends App {
 
+  if (args.headOption == Some("--gen-commands")) {
+    args match {
+      case Array(_) =>
+        println(utils.generateCommandListForBotFather())
+      case Array(_, filename) =>
+        utils.saveCommandListForBotFather(args(1))
+      case _ =>
+        throw new IllegalArgumentException(
+          "--gen-commands takes 0 or more arguments"
+        )
+    }
+    System.exit(0)
+  }
+
   val config = if (args.isEmpty) {
     ConfigFactory.load()
   } else {
@@ -42,10 +56,10 @@ object Ausweis extends App {
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
       .map {
-        case ((reason, aliases), i) =>
+        case ((reason, aliases, help), i) =>
           s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
             s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
-          else ""}"
+          else ""} - $help"
       }
       .mkString("\n")
     IOUtils

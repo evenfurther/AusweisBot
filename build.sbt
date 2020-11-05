@@ -34,3 +34,7 @@ assemblyMergeStrategy in assembly := {
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
 }
+
+lazy val genCommands = taskKey[Unit]("Generate commands.txt for BotFather help")
+fullRunTask(genCommands, Compile, "Ausweis", "--gen-commands", "commands.txt")
+fork in genCommands := true
