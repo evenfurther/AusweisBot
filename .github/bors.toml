@@ -1,2 +1,2 @@
-status = [ "Unit tests", "Docker packaging" ]
+status = [ "Unit and building tests", "Docker packaging" ]
 delete_merged_branches = true

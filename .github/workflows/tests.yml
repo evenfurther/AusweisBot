@@ -6,7 +6,7 @@ on:
       - trying
 jobs:
   test:
-    name: Unit tests
+    name: Unit and building tests
     runs-on: ubuntu-latest
     steps:
       - name: Get Ivy2 cache
@@ -16,11 +16,20 @@ jobs:
           key: ivy2-files
       - name: Checkout
         uses: actions/checkout@v2
-      - name: SBT test
-        id: sbt_test
+      - name: SBT tests and artifacts
         uses: lokkju/github-action-sbt@master
         with:
-          commands: test
+          commands: test assembly genCommands
+      - name: Upload ausweis.jar artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ausweis.jar
+          path: ausweis.jar
+      - name: Upload commands.txt artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: commands.txt
+          path: commands.txt
   package:
     name: Docker packaging
     runs-on: ubuntu-latest
@@ -28,5 +37,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Docker build
-        id: docker_build
         uses: docker/build-push-action@v2

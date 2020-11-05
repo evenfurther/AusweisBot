@@ -167,4 +167,4 @@ La liste des commandes à donner à BotFather pour générer la complétion auto
 
 - soit de `sbt genCommands` lorsqu'on compile depuis les sources, qui générera un fichier
   `commands.txt` dans le répertoire courant ;
-- soit de la commande `docker run --rm rfc1149/ausweisbot java -jar ausweis.jar --gen-commands` pour les utilisateurs de Docker
+- soit de la commande `docker run --rm rfc1149/ausweisbot cat commands.txt` pour les utilisateurs de Docker

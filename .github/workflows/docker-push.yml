@@ -18,14 +18,45 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: rfc1149/ausweisbot:latest
-      - name: Notify via Telegram
+  gen-artifacts:
+    name: Generate and upload the jar and commands list artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Ivy2 cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.ivy2
+          key: ivy2-files
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: SBT artifacts
+        uses: lokkju/github-action-sbt@master
+        with:
+          commands: assembly genCommands
+      - name: Upload ausweis.jar artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ausweis.jar
+          path: ausweis.jar
+      - name: Upload commands.txt artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: commands.txt
+          path: commands.txt
+  notify:
+    name: Notify via Telegram
+    runs-on: ubuntu-latest
+    needs: [docker-push, gen-artifacts]
+    steps:
+      - name: Notify
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          args: The new docker image for rfc1149/ausweisbot:lastest has been pushed
+          message: >
+            The new docker image for rfc1149/ausweisbot (version ${{ github.sha }})
+            has been pushed and artifacts are available
