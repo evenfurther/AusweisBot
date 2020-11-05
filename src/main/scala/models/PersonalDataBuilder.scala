@@ -4,19 +4,19 @@ import java.time.LocalDate
 import java.time.format.{DateTimeFormatter, ResolverStyle}
 import scala.util.{Failure, Success, Try}
 
-class IncompletePersonalData(
-    var suggestedFirstName: Option[String],
-    var suggestedLastName: Option[String],
-    var firstName: Option[String] = None,
-    var lastName: Option[String] = None,
-    var birthDate: Option[LocalDate] = None,
-    var birthPlace: Option[String] = None,
-    var street: Option[String] = None,
-    var zip: Option[String] = None,
-    var city: Option[String] = None
+case class PersonalDataBuilder(
+    suggestedFirstName: Option[String],
+    suggestedLastName: Option[String],
+    firstName: Option[String],
+    lastName: Option[String],
+    birthDate: Option[LocalDate],
+    birthPlace: Option[String],
+    street: Option[String],
+    zip: Option[String],
+    city: Option[String]
 ) {
 
-  import IncompletePersonalData._;
+  import PersonalDataBuilder._;
 
   /**
     * Check if all fields have been filled
@@ -30,21 +30,22 @@ class IncompletePersonalData(
     * Information about the first missing field if any:
     *   - the prompt
     *   - the options to present to the user
-    *   - the function to call to enter the information, returns None if ok, the error otherwise
+    *   - the function to call to enter the information, returns either the modified data or error
     *
     * @return
     */
-  def firstMissingField
-      : Option[(String, Seq[String], String => Option[String])] =
+  def firstMissingField: Option[
+    (String, Seq[String], String => Either[String, PersonalDataBuilder])
+  ] =
     if (firstName.isEmpty)
       Some(
         ("Entrez votre prénom", suggestedFirstName.toSeq, s => {
-          firstName = Some(s); None
+          Right(copy(firstName = Some(s)))
         })
       )
     else if (lastName.isEmpty)
       Some(("Entrez votre nom", suggestedLastName.toSeq, s => {
-        lastName = Some(s); None
+        Right(copy(lastName = Some(s)))
       }))
     else if (birthDate.isEmpty)
       Some(
@@ -53,21 +54,21 @@ class IncompletePersonalData(
           Seq(),
           s =>
             checkBirthDate(s) match {
-              case Some(error) => Some(error)
-              case None        => birthDate = Some(parseBirthDate(s)); None
+              case Some(error) => Left(error)
+              case None        => Right(copy(birthDate = Some(parseBirthDate(s))))
             }
         )
       )
     else if (birthPlace.isEmpty)
       Some(("Entrez votre ville de naissance", Seq(), s => {
-        birthPlace = Some(s); None
+        Right(copy(birthPlace = Some(s)))
       }))
     else if (street.isEmpty)
       Some(
         (
           "Entrez votre adresse de résidence sans le code postal ni la ville",
           Seq(),
-          s => { street = Some(s); None }
+          s => Right(copy(street = Some(s)))
         )
       )
     else if (zip.isEmpty)
@@ -77,40 +78,35 @@ class IncompletePersonalData(
           Seq(),
           s =>
             checkZipCode(s) match {
-              case Some(error) => Some(error)
-              case None        => zip = Some(s); None
+              case Some(error) => Left(error)
+              case None        => Right(copy(zip = Some(s)))
             }
         )
       )
     else if (city.isEmpty)
       Some(("Entrez votre ville", citiesFromZipCode(zip.get), s => {
-        city = Some(s); None
+        Right(copy(city = Some(s)))
       }))
     else None
 
   /**
-    * Strip the identity and keep the rest
-    *
-    * @param suggFirstName a suggestion for the first name
-    * @param suggLastName a suggestion for the last name
+    * Strip the identity and keep the rest. The previous identity will be kept
+    * as suggestion if possible.
     */
-  def stripIdentity(suggFirstName: String, suggLastName: Option[String]) {
-      suggestedFirstName = Some(suggFirstName)
-      suggestedLastName = suggLastName
-      firstName = None
-      lastName = None
-      birthDate = None
+  def stripIdentity =
+    copy(
+      suggestedFirstName = firstName orElse suggestedFirstName,
+      suggestedLastName = lastName orElse suggestedLastName,
+      firstName = None,
+      lastName = None,
+      birthDate = None,
       birthPlace = None
-  }
+    )
 
   /**
     * Strip the address and keep the rest
     */
-  def stripAddress() {
-      street = None
-      zip = None
-      city = None
-  }
+  def stripAddress = copy(street = None, zip = None, city = None)
 
   /**
     * Build personal data from complete incomplete data
@@ -136,44 +132,49 @@ class IncompletePersonalData(
         s"Naissance : le ${d.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}${birthPlace
           .map(" à " + _)}"
       ),
-      street.map(s => s"Adresse de résidence : $s${zip.map(z => s" $z${city.map(" " + _)}")}")
+      street.map(s =>
+        s"Adresse de résidence : $s${zip.map(z => s" $z${city.map(" " + _)}")}"
+      )
     ).flatten.map("- " + _).mkString("\n")
   }
 }
 
-object IncompletePersonalData {
+object PersonalDataBuilder {
 
-  def forgetIdentity(
-      data: PersonalData,
+  /**
+    * Make builder from personal data.
+    *
+    * @param data the original data
+    * @return a data builder
+    */
+  def apply(data: PersonalData): PersonalDataBuilder =
+    PersonalDataBuilder(
+      Some(data.firstName),
+      Some(data.lastName),
+      Some(data.firstName),
+      Some(data.lastName),
+      Some(data.birthDate),
+      Some(data.birthPlace),
+      Some(data.street),
+      Some(data.zip),
+      Some(data.city)
+    )
+
+  def apply(
       suggestedFirstName: String,
-      suggestedLastName: Option[String],
-  ): IncompletePersonalData = {
-    new IncompletePersonalData(
+      suggestedLastName: Option[String]
+  ): PersonalDataBuilder =
+    PersonalDataBuilder(
       Some(suggestedFirstName),
       suggestedLastName,
       None,
       None,
       None,
       None,
-      Some(data.street),
-      Some(data.zip),
-      Some(data.city)
-    )
-  }
-
-  def forgetAddress(data: PersonalData): IncompletePersonalData = {
-    new IncompletePersonalData(
-      None,
-      None,
-      Some(data.firstName),
-      Some(data.lastName),
-      Some(data.birthDate),
-      Some(data.birthPlace),
       None,
       None,
       None
     )
-  }
 
   /**
     * Parse a textual date and return a plausible one. Any year in [0, 20] will
@@ -183,6 +184,20 @@ object IncompletePersonalData {
     * @return a plausible date
     */
   def parseBirthDate(text: String): LocalDate = {
+    def forgetAddress(data: PersonalData): PersonalDataBuilder = {
+      new PersonalDataBuilder(
+        None,
+        None,
+        Some(data.firstName),
+        Some(data.lastName),
+        Some(data.birthDate),
+        Some(data.birthPlace),
+        None,
+        None,
+        None
+      )
+    }
+
     val date = LocalDate.parse(
       text,
       DateTimeFormatter

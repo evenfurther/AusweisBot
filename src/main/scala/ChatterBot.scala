@@ -12,7 +12,7 @@ import com.bot4s.telegram.methods.ParseMode
 import com.bot4s.telegram.methods.ParseMode.ParseMode
 import com.bot4s.telegram.models._
 import models.DBProtocol.DBCommand
-import models.{Authorization, DBProtocol, IncompletePersonalData, PersonalData}
+import models.{Authorization, DBProtocol, PersonalData, PersonalDataBuilder}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -77,7 +77,7 @@ private class ChatterBot(
   }
 
   private[this] def initialData =
-    new IncompletePersonalData(Some(user.firstName), user.lastName)
+    PersonalDataBuilder(user.firstName, user.lastName)
 
   // Start by requesting stored data about the user. We treat an error
   // from the database as the absence of the document; the consequence is
@@ -153,10 +153,10 @@ private class ChatterBot(
     * @return the behavior to handle user input
     */
   private[this] def requestData(
-      partialData: IncompletePersonalData
+      dataBuilder: PersonalDataBuilder
   ): Behavior[ChatterBotControl] = {
     val (fieldText, fieldSuggestions, fieldSetter) =
-      partialData.firstMissingField.get
+      dataBuilder.firstMissingField.get
     sendText(
       fieldText,
       Seq(fieldSuggestions) // All proposals on one raw
@@ -169,34 +169,32 @@ private class ChatterBot(
       case FromMainBot(PrivateCommand("start", _)) => handleStart()
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
-        requestData(partialData)
+        requestData(dataBuilder)
       case FromMainBot(PrivateCommand("data", _)) =>
         sendText(
-          s"À ce stade, je connais les informations suivantes (non stockées) :\n$partialData\n- Numéro unique Telegram : ${user.id}"
+          s"À ce stade, je connais les informations suivantes (non stockées) :\n$dataBuilder\n- Numéro unique Telegram : ${user.id}"
         )
-        requestData(partialData)
+        requestData(dataBuilder)
       case FromMainBot(PrivateCommand("help", _)) =>
         help()
-        requestData(partialData)
+        requestData(dataBuilder)
       case FromMainBot(PrivateCommand("i", Seq())) =>
-        partialData.stripIdentity(user.firstName, user.lastName)
-        requestData(partialData)
+        requestData(dataBuilder.stripIdentity)
       case FromMainBot(PrivateCommand("l", Seq())) =>
-        partialData.stripAddress()
-        requestData(partialData)
+        requestData(dataBuilder.stripAddress)
       case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
           "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
         )
-        requestData(partialData)
+        requestData(dataBuilder)
       case FromMainBot(PrivateMessage(text)) =>
         fieldSetter(text) match {
-          case Some(errorMsg) =>
+          case Left(errorMsg) =>
             sendText(errorMsg)
-            requestData(partialData)
-          case None =>
-            if (partialData.isComplete) {
-              val data = partialData.toPersonalData
+            requestData(dataBuilder)
+          case Right(dataBuilder) =>
+            if (dataBuilder.isComplete) {
+              val data = dataBuilder.toPersonalData
               sendText(
                 "Vous avez saisi les informations suivantes :\n" + formatData(
                   user,
@@ -209,7 +207,7 @@ private class ChatterBot(
               )
               offerCommands(data)
             } else {
-              requestData(partialData)
+              requestData(dataBuilder)
             }
         }
       case FromMainBot(AnnounceShutdown(reason)) =>
@@ -296,13 +294,10 @@ private class ChatterBot(
         Behaviors.same
       case FromMainBot(PrivateCommand("i", Seq())) =>
         db ! DBProtocol.Delete(user.id)
-        requestData(
-          IncompletePersonalData
-            .forgetIdentity(data, user.firstName, user.lastName)
-        )
+        requestData(PersonalDataBuilder(data).stripIdentity)
       case FromMainBot(PrivateCommand("l", Seq())) =>
         db ! DBProtocol.Delete(user.id)
-        requestData(IncompletePersonalData.forgetAddress(data))
+        requestData(PersonalDataBuilder(data).stripAddress)
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
