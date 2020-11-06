@@ -55,11 +55,10 @@ object Ausweis extends App {
   // Fill global configuration
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
-      .map {
-        case ((reason, aliases, help), i) =>
-          s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
-            s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
-          else ""} - $help"
+      .map { case ((reason, aliases, help), i) =>
+        s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
+          s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
+        else ""} - $help"
       }
       .mkString("\n")
     IOUtils
@@ -127,10 +126,9 @@ object Ausweis extends App {
     Signal.handle(new Signal("INT"), signalHandler)
     Signal.handle(new Signal("TERM"), signalHandler)
 
-    Behaviors.receiveSignal {
-      case (context, Terminated(_)) =>
-        context.log.info("Main bot actor terminated, terminating ActorSystem")
-        Behaviors.stopped
+    Behaviors.receiveSignal { case (context, Terminated(_)) =>
+      context.log.info("Main bot actor terminated, terminating ActorSystem")
+      Behaviors.stopped
     }
   }
 

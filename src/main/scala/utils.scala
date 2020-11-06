@@ -35,16 +35,15 @@ object utils {
       ("i", "met à jour l'identité en conservant l'adresse enregistrée")
     )
     val actions = models.Authorization.reasons
-      .map {
-        case (action, (_, _, _, help)) =>
-          (
-            action,
-            s"$help (peut-être suivi d'une heure de sortie ou du mot « oubli »)"
-          )
+      .map { case (action, (_, _, _, help)) =>
+        (
+          action,
+          s"$help (peut-être suivi d'une heure de sortie ou du mot « oubli »)"
+        )
       }
       .filter(a => StringUtils.isAsciiPrintable(a._1))
-    (commands ++ actions).sorted.map {
-      case (c, h) => s"$c - $h\n"
+    (commands ++ actions).sorted.map { case (c, h) =>
+      s"$c - $h\n"
     }.mkString
   }
 

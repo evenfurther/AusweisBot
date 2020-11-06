@@ -43,8 +43,7 @@ private class ChatterBot(
     context.executionContext
   private[this] implicit val timeout: Timeout = 5.seconds
 
-  /**
-    * Send a message to the user.
+  /** Send a message to the user.
     *
     * @param text the message to send
     * @param keyboard the content of the keyboard to display, grouped by rows
@@ -56,8 +55,7 @@ private class ChatterBot(
   ): Unit =
     outgoing ! SendText(ChatId(user.id), text, keyboard, parseMode)
 
-  /**
-    * Send a PDF file to the user. The user will be presented with the "bot is uploading a file" notification
+  /** Send a PDF file to the user. The user will be presented with the "bot is uploading a file" notification
     * in Telegram.
     *
     * @param content the file content to send
@@ -87,8 +85,7 @@ private class ChatterBot(
       case _                   => NoCachedData
     }
 
-  /**
-    * The start of the bot logic is here. We will first wait for the data to
+  /** The start of the bot logic is here. We will first wait for the data to
     * arrive from the database and then switch to the `handleCommands`
     * behavior. If we could not get data about this user, because of nothing is
     * stored in the database or if there was a database error, we only handle
@@ -131,8 +128,7 @@ private class ChatterBot(
     }
   }
 
-  /**
-    * Common handler for the `/start` function. When we arrive here, either we previously didn't find data
+  /** Common handler for the `/start` function. When we arrive here, either we previously didn't find data
     * about the user in the database or the data was explicitely deleted using the `/start` command.
     *
     * @param dataBuilder the initial data to start from
@@ -147,8 +143,7 @@ private class ChatterBot(
     requestData(dataBuilder)
   }
 
-  /**
-    * Collect data about the user.
+  /** Collect data about the user.
     *
     * @param textualData the data we have so far in the same order as the [[models.PersonalData PersonalData]] case class
     * @return the behavior to handle user input
@@ -246,8 +241,7 @@ private class ChatterBot(
     }
   }
 
-  /**
-    * Send common shortcuts to the user as a dedicated keyboard and prompt for a command.
+  /** Send common shortcuts to the user as a dedicated keyboard and prompt for a command.
     *
     * @param data the user data
     * @return the behavior to handle incoming commands
@@ -260,8 +254,7 @@ private class ChatterBot(
     handleCommands(data)
   }
 
-  /**
-    * Handle incoming commands.
+  /** Handle incoming commands.
     *
     * @param data the user data
     * @return the behavior to handle incoming commands
@@ -381,8 +374,7 @@ private class ChatterBot(
       makeButtons(reasons)
     )
 
-  /**
-    * Send an empty certificate to print and fill by hand.
+  /** Send an empty certificate to print and fill by hand.
     *
     * @param data the user data
     */
@@ -402,8 +394,7 @@ private class ChatterBot(
     })
   }
 
-  /**
-    * Handle a PDF request incoming command.
+  /** Handle a PDF request incoming command.
     *
     * @param data the user data
     * @param reasons the reasons for going out
@@ -476,8 +467,7 @@ private class ChatterBot(
 
 object ChatterBot {
 
-  /**
-    * Build a chatter bot for an individual conversation.
+  /** Build a chatter bot for an individual conversation.
     *
     * @param client the Telegram client to send outgoing messages
     * @param user the Telegram bot API `User` structure describing the peer
@@ -500,13 +490,20 @@ object ChatterBot {
         // the whole logic is off if the user misses a message.
         val outgoing = context.spawn(TelegramSender(client), "sender")
         context.watch(outgoing)
-        new ChatterBot(context, outgoing, user, pdfBuilder, db, debugActor).startingPoint
+        new ChatterBot(
+          context,
+          outgoing,
+          user,
+          pdfBuilder,
+          db,
+          debugActor
+        ).startingPoint
       }
       .transformMessages {
         // We expand commands into the generic command here
         case PrivateCommand(
-            command,
-            args
+              command,
+              args
             ) if Authorization.reasons.contains(command) =>
           FromMainBot(PrivateCommand("autre", command +: args))
         case fromMainBot => FromMainBot(fromMainBot)
@@ -537,8 +534,7 @@ object ChatterBot {
     )
   }
 
-  /**
-    * Parse command arguments into a date and time.
+  /** Parse command arguments into a date and time.
     *
     * @param args the arguments (nothing explicit, "oubli", "11h30")
     * @return a corresponding date and time in `Right` or an error message in `Left`
@@ -573,8 +569,7 @@ object ChatterBot {
     }
   }
 
-  /**
-    * Add a credible date to the outputTime if possible. It will be either yesterday, today, or tomorrow, whatever makes
+  /** Add a credible date to the outputTime if possible. It will be either yesterday, today, or tomorrow, whatever makes
     * the difference with nowDateTime smaller.
     *
     * @param outputTime the output time to augment with a date
@@ -609,8 +604,7 @@ object ChatterBot {
        |- Numéro unique Telegram : ${user.id}
        |""".stripMargin
 
-  /**
-    * Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
+  /** Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
     */
   implicit class FrenchDayOfWeek(dow: DayOfWeek) {
     val toFrenchDay: String = dow match {

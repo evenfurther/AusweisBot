@@ -49,7 +49,10 @@ class QRCodeSpec extends Specification {
         LocalDateTime.of(2021, 1, 2, 8, 9),
         Seq("santé")
       )
-      QRCode.buildContent(data, auth) must be equalTo ("Cree le: 02/01/2021 a 08h09;\nNom: Doe;\nPrenom: John;\n"
+      QRCode.buildContent(
+        data,
+        auth
+      ) must be equalTo ("Cree le: 02/01/2021 a 08h09;\nNom: Doe;\nPrenom: John;\n"
         + "Naissance: 03/02/1970 a Montélimar;\nAdresse: 1 rue de la Paix 75017 Paris;\n"
         + "Sortie: 04/03/2021 a 05:06;\nMotifs: sante;\n")
     }

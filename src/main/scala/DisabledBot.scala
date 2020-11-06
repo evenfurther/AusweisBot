@@ -90,8 +90,7 @@ private class DisabledBot(
 
 object DisabledBot {
 
-  /**
-    * Make a bot connecting to Telegram servers and telling users that they don't need
+  /** Make a bot connecting to Telegram servers and telling users that they don't need
     * an authorization anymore.
     *
     * @param token the Telegram bot token given by [[https://telegram.me/BotFather BotFather]]

@@ -20,8 +20,8 @@ class ChatterBotSpec extends Specification {
     val db = testKit.createTestProbe[DBCommand]()
     val debug = testKit.createTestProbe[String]()
     val user = User(42, false, "John")
-    val chatterBot = testKit.spawn(Behaviors.setup[ChatterBotControl] {
-      context =>
+    val chatterBot =
+      testKit.spawn(Behaviors.setup[ChatterBotControl] { context =>
         new ChatterBot(
           context,
           outgoing.ref,
@@ -30,7 +30,7 @@ class ChatterBotSpec extends Specification {
           db.ref,
           Some(debug.ref)
         ).startingPoint
-    })
+      })
 
     override def after: Any = testKit.shutdownTestKit()
 
@@ -115,9 +115,9 @@ class ChatterBotSpec extends Specification {
       sendCommand("autre", Seq("santé+promenade", s"${hour}h30"))
       pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
         case PDFBuilder.BuildPDF(
-            `modelData`,
-            Some(Authorization(output, made, Seq("sante", "sport_animaux"))),
-            replyTo
+              `modelData`,
+              Some(Authorization(output, made, Seq("sante", "sport_animaux"))),
+              replyTo
             ) =>
           output.toLocalTime must be equalTo (LocalTime.of(hour, 30))
           val mlt = made.toLocalTime
@@ -136,9 +136,9 @@ class ChatterBotSpec extends Specification {
       }
       outgoing.expectMessageType[SendFile] match {
         case SendFile(
-            chatId: ChatId,
-            Contents("attestation.pdf", Array(1, 2, 3)),
-            Some(`documentTitle`)
+              chatId: ChatId,
+              Contents("attestation.pdf", Array(1, 2, 3)),
+              Some(`documentTitle`)
             ) =>
           chatId must be equalTo (ChatId(42))
         case s =>
