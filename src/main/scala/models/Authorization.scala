@@ -20,7 +20,7 @@ object Authorization {
     Seq(
       (
         "travail",
-        578,
+        488,
         Seq(
           "concours",
           "examen",
@@ -32,56 +32,56 @@ object Authorization {
       ),
       (
         "achats",
-        533,
+        417,
         Seq(),
         Some("courses"),
         "courses ou retrait de marchandises"
       ),
       (
         "sante",
-        477,
+        347,
         Seq("soins"),
         Some("santé"),
         "rendez-vous de santé ou de soins"
       ),
       (
         "famille",
-        435,
+        325,
         Seq("proches"),
         None,
         "motif familial impérieux, visite à des personnes vulnérables"
       ),
       (
         "handicap",
-        396,
+        291,
         Seq(),
         None,
         "assistance aux personnes en situation de handicap"
       ),
       (
         "sport_animaux",
-        358,
+        269,
         Seq("sport", "animaux", "sortie"),
         Some("promenade"),
         "sport, promenade, besoins des animaux"
       ),
       (
         "convocation",
-        295,
+        199,
         Seq("administratif", "judiciaire"),
         None,
         "convocation administrative ou judiciaire"
       ),
       (
         "missions",
-        255,
+        178,
         Seq("mission"),
         None,
         "mission pour le compte d'un service public"
       ),
       (
         "enfants",
-        211,
+        157,
         Seq("scolaire", "école", "crèche", "collège", "lycée"),
         None,
         "déplacement pour amener ou aller chercher les enfants à leur lien d'éducation ou de garde"
