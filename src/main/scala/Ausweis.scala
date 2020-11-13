@@ -128,10 +128,9 @@ object Ausweis extends App {
     Signal.handle(new Signal("INT"), signalHandler)
     Signal.handle(new Signal("TERM"), signalHandler)
 
-    Behaviors.receiveSignal {
-      case (context, Terminated(_)) =>
-        context.log.info("Main bot actor terminated, terminating ActorSystem")
-        Behaviors.stopped
+    Behaviors.receiveSignal { case (context, Terminated(_)) =>
+      context.log.info("Main bot actor terminated, terminating ActorSystem")
+      Behaviors.stopped
     }
   }
 

@@ -19,8 +19,7 @@ object BotUtils {
 
     import WithIdleTimeout._
 
-    /**
-      * Surround the behavior with a timeout controlling one. All messages are
+    /** Surround the behavior with a timeout controlling one. All messages are
       * forwarded to the inner behavior. However, if no message appears in the
       * specified delay, `timeout` message wil be sent to `controller`.
       *
@@ -74,8 +73,7 @@ object BotUtils {
 
     import WithThrottling._
 
-    /**
-      * Surround the behaviour with a throttling one. Incoming messages
+    /** Surround the behaviour with a throttling one. Incoming messages
       * are sent to the inner behavior with an inter-arrival delay. They
       * are queued in the meantime. If the queue size is greater than the
       * maximum allowed, the queue is emptied and all messages in it are
@@ -119,14 +117,13 @@ object BotUtils {
             }
           }
         }
-        .transformMessages[T] {
-          case message => ThrottleMessage(message)
+        .transformMessages[T] { case message =>
+          ThrottleMessage(message)
         }
     }
   }
 
-  /**
-    * Extends [[com.bot4s.telegram.future.Polling Polling]] with an idempotent shutdown message, as
+  /** Extends [[com.bot4s.telegram.future.Polling Polling]] with an idempotent shutdown message, as
     * the default implementation throws an exception  if `shutdown()` is called several times in a row.
     */
   trait IdempotentShutdown extends Polling {

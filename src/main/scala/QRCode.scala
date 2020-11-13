@@ -6,8 +6,7 @@ import models.{Authorization, PersonalData}
 
 import scala.collection.JavaConverters._
 
-/**
-  * QR-code object with correction level M.
+/** QR-code object with correction level M.
   *
   * @param size the desired side size
   * @param text the text to put into the QR code
@@ -16,8 +15,7 @@ class QRCode(size: Int, text: String) {
 
   private[this] val matrix = QrCode.encodeText(text, QrCode.Ecc.MEDIUM)
 
-  /**
-    * Return the bytes making up the PNG for this QR code.
+  /** Return the bytes making up the PNG for this QR code.
     *
     * @return the PNG data
     */
@@ -33,8 +31,7 @@ class QRCode(size: Int, text: String) {
 
 object QRCode {
 
-  /**
-    * Build a QR-code.
+  /** Build a QR-code.
     *
     * @param size the desired side size
     * @param data the user data
@@ -53,7 +50,7 @@ object QRCode {
     val reasons =
       Authorization.orderedCanonicalValidReasons(auth.reasons).mkString(", ")
     s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)
-         .replace(':', 'h')}
+      .replace(':', 'h')}
        |Nom: ${data.lastName}
        |Prenom: ${data.firstName}
        |Naissance: ${data.birthDateText} a ${data.birthPlace}

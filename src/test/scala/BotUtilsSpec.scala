@@ -16,10 +16,9 @@ class BotUtilsSpec extends Specification {
       val witness = testKit.createTestProbe[Int]()
       val actor = testKit.spawn(
         Behaviors
-          .receiveMessage[Int] {
-            case i =>
-              witness.ref ! i
-              Behaviors.same
+          .receiveMessage[Int] { case i =>
+            witness.ref ! i
+            Behaviors.same
           }
           .withThrottling(20.milliseconds, 5)
       )
@@ -33,10 +32,9 @@ class BotUtilsSpec extends Specification {
       val witness = testKit.createTestProbe[Int]()
       val actor = testKit.spawn(
         Behaviors
-          .receiveMessage[Int] {
-            case i =>
-              witness.ref ! i
-              Behaviors.same
+          .receiveMessage[Int] { case i =>
+            witness.ref ! i
+            Behaviors.same
           }
           .withThrottling(20.milliseconds, 5)
       )
@@ -55,11 +53,14 @@ class BotUtilsSpec extends Specification {
     "timeout when there are no more messages" in {
       val witness = testKit.createTestProbe[Int]()
       val controller = testKit.createTestProbe[String]()
-      val actor = testKit.spawn(Behaviors.receiveMessage[Int] {
-        case i =>
-          witness.ref ! i
-          Behaviors.same
-      }.withIdleTimeout(20.milliseconds, controller.ref, "idle"))
+      val actor = testKit.spawn(
+        Behaviors
+          .receiveMessage[Int] { case i =>
+            witness.ref ! i
+            Behaviors.same
+          }
+          .withIdleTimeout(20.milliseconds, controller.ref, "idle")
+      )
       (1 to 6).foreach(actor ! _)
       (1 to 5).foreach(witness.expectMessage(_))
       controller.expectNoMessage(5.milliseconds)

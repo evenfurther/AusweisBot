@@ -19,8 +19,7 @@ case class PersonalDataBuilder(
 
   import PersonalDataBuilder._;
 
-  /**
-    * Check if all fields have been filled
+  /** Check if all fields have been filled
     *
     * @return true if all fields have been fields
     */
@@ -30,8 +29,7 @@ case class PersonalDataBuilder(
   private def consolidate =
     if (isComplete) Right(toPersonalData) else Left(this)
 
-  /**
-    * Information about the first missing field:
+  /** Information about the first missing field:
     *   - the prompt
     *   - the options to present to the user
     *   - the function to call to enter the information, returns either the complete data,
@@ -45,13 +43,21 @@ case class PersonalDataBuilder(
       String => Either[String, Either[PersonalDataBuilder, PersonalData]]
   ) =
     if (firstName.isEmpty)
-      ("Entrez votre prénom", suggestedFirstName.toSeq, s => {
-        Right(copy(firstName = Some(s)).consolidate)
-      })
+      (
+        "Entrez votre prénom",
+        suggestedFirstName.toSeq,
+        s => {
+          Right(copy(firstName = Some(s)).consolidate)
+        }
+      )
     else if (lastName.isEmpty)
-      ("Entrez votre nom", suggestedLastName.toSeq, s => {
-        Right(copy(lastName = Some(s)).consolidate)
-      })
+      (
+        "Entrez votre nom",
+        suggestedLastName.toSeq,
+        s => {
+          Right(copy(lastName = Some(s)).consolidate)
+        }
+      )
     else if (birthDate.isEmpty)
       (
         "Entrez votre date de naissance (jj/mm/aaaa)",
@@ -64,9 +70,13 @@ case class PersonalDataBuilder(
           }
       )
     else if (birthPlace.isEmpty)
-      ("Entrez votre ville de naissance", Seq(), s => {
-        Right(copy(birthPlace = Some(s)).consolidate)
-      })
+      (
+        "Entrez votre ville de naissance",
+        Seq(),
+        s => {
+          Right(copy(birthPlace = Some(s)).consolidate)
+        }
+      )
     else if (street.isEmpty)
       (
         "Entrez votre adresse de résidence sans le code postal ni la ville",
@@ -84,16 +94,19 @@ case class PersonalDataBuilder(
           }
       )
     else if (city.isEmpty)
-      ("Entrez votre ville", citiesFromZipCode(zip.get), s => {
-        Right(copy(city = Some(s)).consolidate)
-      })
+      (
+        "Entrez votre ville",
+        citiesFromZipCode(zip.get),
+        s => {
+          Right(copy(city = Some(s)).consolidate)
+        }
+      )
     else
       throw new IllegalStateException(
         "A PersonalDataBuilder should not be used when it is complete"
       )
 
-  /**
-    * Strip the identity and keep the rest. The previous identity will be kept
+  /** Strip the identity and keep the rest. The previous identity will be kept
     * as suggestion if possible.
     * @param fn A new first name suggestion
     * @param ln A new last name suggestion
@@ -112,8 +125,7 @@ case class PersonalDataBuilder(
       birthPlace = None
     )
 
-  /**
-    * Strip the address and keep the rest
+  /** Strip the address and keep the rest
     */
   private def stripAddress = copy(street = None, zip = None, city = None)
 
@@ -130,8 +142,7 @@ case class PersonalDataBuilder(
       stripIdentity(suggestedFirstName, suggestedLastName)
   }
 
-  /**
-    * Build personal data from complete incomplete data
+  /** Build personal data from complete incomplete data
     *
     * @return the corresponding personal data
     */
@@ -178,8 +189,7 @@ object PersonalDataBuilder {
       Some(data.city)
     )
 
-  /**
-    * Make builder from personal data.
+  /** Make builder from personal data.
     *
     * @param data the original data
     * @param suggestedFirstName the suggested first name
@@ -210,8 +220,7 @@ object PersonalDataBuilder {
       None
     )
 
-  /**
-    * Parse a textual date and return a plausible one. Any year in [0, 20] will
+  /** Parse a textual date and return a plausible one. Any year in [0, 20] will
     * be added 2000 to it, and any year in [21, 99] will be added 1900 to it.
     * Of course it is best to supply the full year.
     * @param text the date to parse
@@ -233,8 +242,7 @@ object PersonalDataBuilder {
     }
   }
 
-  /**
-    * Check that a birth date is at the right format.
+  /** Check that a birth date is at the right format.
     *
     * @param text the birth date
     * @return the error message to display if the date is invalid
@@ -258,8 +266,7 @@ object PersonalDataBuilder {
     }
   }
 
-  /**
-    * Check that the zip code is at the right format.
+  /** Check that the zip code is at the right format.
     *
     * @param text the zip code
     * @return the error message to display if the zip code is invalid

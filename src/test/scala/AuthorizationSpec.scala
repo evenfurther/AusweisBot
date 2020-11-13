@@ -5,11 +5,15 @@ class AuthorizationSpec extends Specification {
 
   "unifyValidReasons" should {
     "remove the duplicates by keeping the first one only" in {
-      Authorization.unifyValidReasons(Seq("sport", "famille", "promenade")) must be equalTo (Seq(
+      Authorization.unifyValidReasons(
+        Seq("sport", "famille", "promenade")
+      ) must be equalTo (Seq(
         "sport_animaux",
         "famille"
       ))
-      Authorization.unifyValidReasons(Seq("promenade", "famille", "sport")) must be equalTo (Seq(
+      Authorization.unifyValidReasons(
+        Seq("promenade", "famille", "sport")
+      ) must be equalTo (Seq(
         "sport_animaux",
         "famille"
       ))

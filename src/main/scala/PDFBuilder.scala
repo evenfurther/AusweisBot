@@ -12,8 +12,7 @@ import scala.util.Try
 
 object PDFBuilder {
 
-  /**
-    * Build a PDF document from personal data and optional output from home information.
+  /** Build a PDF document from personal data and optional output from home information.
     *
     * @param data the user data
     * @param auth if defined, the output from home information to use, otherwise an
@@ -126,16 +125,14 @@ object PDFBuilder {
       replyTo: ActorRef[Try[Array[Byte]]]
   )
 
-  /**
-    * Make a PDF builder.
+  /** Make a PDF builder.
     *
     * @return a behavior to serially build PDF documents
     */
   def makeActor(): Behavior[BuildPDF] = Behaviors.setup { implicit context =>
-    Behaviors.receiveMessage {
-      case BuildPDF(data, auth, replyTo) =>
-        replyTo ! Try { buildPDF(data, auth) }
-        Behaviors.same
+    Behaviors.receiveMessage { case BuildPDF(data, auth, replyTo) =>
+      replyTo ! Try { buildPDF(data, auth) }
+      Behaviors.same
     }
   }
 

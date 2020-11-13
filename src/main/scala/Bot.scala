@@ -140,8 +140,7 @@ object Bot {
       Option[ActorRef[String]]
   ) => Behavior[PerChatBotCommand]
 
-  /**
-    * Make a bot connecting to Telegram servers and handling conversations from users by
+  /** Make a bot connecting to Telegram servers and handling conversations from users by
     * dispatching input to actors created by `perChatStarter` on demand.
     *
     * @param token the Telegram bot token given by [[https://telegram.me/BotFather BotFather]]
@@ -161,13 +160,11 @@ object Bot {
   case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
   case object InitiateGlobalShutdown extends BotCommand
 
-  /**
-    * The base of message received during a private conversation by the bot
+  /** The base of message received during a private conversation by the bot
     */
   sealed trait PerChatBotCommand
 
-  /**
-    * Private command received for an individual conversation actor
+  /** Private command received for an individual conversation actor
     *
     * @param command the command without the leading /
     * @param args the space-separated command arguments
@@ -175,30 +172,26 @@ object Bot {
   case class PrivateCommand(command: String, args: Seq[String])
       extends PerChatBotCommand
 
-  /**
-    * Private message received for an individual conversation actor
+  /** Private message received for an individual conversation actor
     *
     * @param data the textual message
     */
   case class PrivateMessage(data: String) extends PerChatBotCommand
 
-  /**
-    * Request that the chat bot is shut down
+  /** Request that the chat bot is shut down
     *
     * @param reason the reason for the shut down
     */
   case class AnnounceShutdown(reason: String) extends PerChatBotCommand
 
-  /**
-    * Request that a particular conversation actor is shutdown. The corresponding
+  /** Request that a particular conversation actor is shutdown. The corresponding
     * actor will be stopped.
     *
     * @param userId the user identifier
     */
   case class RequestChatShutdown(userId: Int, reason: String) extends BotCommand
 
-  /**
-    * Parse incoming textual message into a regular message or a command starting by '/'.
+  /** Parse incoming textual message into a regular message or a command starting by '/'.
     *
     * @param text the incoming textual message
     * @return a `Text` or `Command` object

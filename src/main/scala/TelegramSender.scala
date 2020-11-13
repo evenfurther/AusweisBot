@@ -44,10 +44,12 @@ private class TelegramSender(
       waitForConfirmation
     case SendFile(chatId, file, caption) =>
       val sent =
-        for (_ <- client(
-               SendChatAction(chatId, ChatAction.UploadDocument)
-             );
-             _ <- client(SendDocument(chatId, file, caption = caption)))
+        for (
+          _ <- client(
+            SendChatAction(chatId, ChatAction.UploadDocument)
+          );
+          _ <- client(SendDocument(chatId, file, caption = caption))
+        )
           yield ()
       context.pipeToSelf(sent)(Sent)
       waitForConfirmation
@@ -75,8 +77,7 @@ private class TelegramSender(
 
 object TelegramSender {
 
-  /**
-    * Send messages in order. If a message cannot be sent, an exception will be thrown.
+  /** Send messages in order. If a message cannot be sent, an exception will be thrown.
     * For example, this can be used to order messages sent to a single client.
     *
     * @param client The RequestHandler to send messages through
