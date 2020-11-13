@@ -28,6 +28,10 @@ object PDFBuilder {
       PDImageXObject.createFromByteArray(doc, qrCode.pngBytes, "qrcode.png")
     }
 
+    // We do not use forms, but we don't want the auto-fill either
+    val form = doc.getDocumentCatalog().getAcroForm()
+    form.getField("Heure").setValue(" ")
+
     {
       val first_page = doc.getPage(0)
 
@@ -40,31 +44,32 @@ object PDFBuilder {
       )
       addText(
         content,
-        119,
-        696,
+        107,
+        657,
         s"${data.firstName} ${data.lastName}",
         11
       )
-      addText(content, 119, 674, data.birthDateText, 11)
-      addText(content, 297, 674, data.birthPlace, 11)
+      addText(content, 107, 627, data.birthDateText, 11)
+      addText(content, 240, 627, data.birthPlace, 11)
       addText(
         content,
-        133,
-        652,
+        124,
+        596,
         s"${data.street} ${data.zip} ${data.city}",
         11
       )
-      addText(content, 105, 177, data.city, 11)
+      addText(content, 93, 122, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 91, 153, dateText(auth.output), 11)
-        addText(content, 264, 153, timeText(auth.output), 11)
+        addText(content, 76, 92, dateText(auth.output), 11)
+        addText(content, 246, 92, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
-          Authorization.reasons.get(reason).foreach { case (_, y, _, _) =>
-            addText(content, 78, y, "x", 18)
+          Authorization.reasons.get(reason).foreach {
+            case (_, y, _, _) =>
+              addText(content, 59, y, "x", 12)
           }
         }
       }
-      qrCodeImg.foreach(content.drawImage(_, 439, 100, 92, 92))
+      qrCodeImg.foreach(content.drawImage(_, 439, 25, 92, 92))
 
       content.close()
     }
@@ -79,7 +84,7 @@ object PDFBuilder {
         true,
         true
       )
-      content.drawImage(qrCodeImg, 50, 491.89f, 300, 300)
+      content.drawImage(qrCodeImg, 50, 451.89f, 300, 300)
       content.close()
     }
 
