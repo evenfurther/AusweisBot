@@ -17,6 +17,7 @@ import com.bot4s.telegram.models.{ChatId, User}
 import com.typesafe.config.ConfigFactory
 import models.Authorization
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang3.StringUtils
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 import sun.misc.{Signal, SignalHandler}
 
@@ -55,10 +56,11 @@ object Ausweis extends App {
   // Fill global configuration
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
-      .map { case ((reason, aliases, help), i) =>
-        s"- Case ${i + 1} : `/$reason`${if (aliases.nonEmpty)
-          s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
-        else ""} - $help"
+      .map {
+        case ((reason, aliases, help), i) =>
+          s"- Case ${i + 1} : /${StringUtils.stripAccents(reason)}${if (aliases.nonEmpty)
+            s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
+          else ""} - $help"
       }
       .mkString("\n")
     IOUtils
