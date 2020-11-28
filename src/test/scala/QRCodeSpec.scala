@@ -68,9 +68,9 @@ class QRCodeSpec extends Specification {
         "Paris"
       )
       val auth = Authorization(
-        LocalDateTime.of(2020, 11, 13, 20, 17),
-        LocalDateTime.of(2020, 11, 13, 17, 12),
-        Seq("travail")
+        LocalDateTime.of(2020, 11, 28, 13, 14),
+        LocalDateTime.of(2020, 11, 28, 0, 44),
+        Seq("sport_animaux")
       )
       val officialBitmap = new BinaryBitmap(
         new HybridBinarizer(new BufferedImageLuminanceSource(loadOfficial()))
