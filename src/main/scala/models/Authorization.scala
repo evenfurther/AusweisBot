@@ -20,7 +20,7 @@ object Authorization {
     Seq(
       (
         "travail",
-        553,
+        540,
         Seq(
           "concours",
           "examen",
@@ -28,63 +28,56 @@ object Authorization {
           "professionnel"
         ),
         None,
-        "travail, concours ou examens"
-      ),
-      (
-        "achats_culturel_cultuel",
-        482,
-        Seq("culture", "religion", "culte"),
-        Some("courses"),
-        "courses ou retrait de marchandises, livraisons, culture, religion"
+        "travail, formation, concours ou examens"
       ),
       (
         "sante",
-        434,
+        508,
         Seq("soins"),
         Some("santé"),
         "rendez-vous de santé ou de soins"
       ),
       (
         "famille",
-        410,
-        Seq("proches"),
+        474,
+        Seq("enfants"),
         None,
-        "motif familial impérieux, visite à des personnes vulnérables"
+        "motif familial impérieux, visite à des personnes vulnérables, garde d'enfants"
       ),
       (
         "handicap",
-        373,
+        441,
         Seq(),
         None,
         "assistance aux personnes en situation de handicap"
       ),
       (
-        "sport_animaux",
-        349,
-        Seq("sport", "animaux", "sortie"),
-        Some("promenade"),
-        "sport, promenade, besoins des animaux"
-      ),
-      (
         "convocation",
-        276,
+        418,
         Seq("administratif", "judiciaire"),
         None,
         "convocation administrative ou judiciaire"
       ),
       (
         "missions",
-        252,
+        397,
         Seq("mission"),
         None,
         "mission pour le compte d'un service public"
       ),
       (
-        "enfants",
-        228,
-        Seq("scolaire", "école", "crèche", "collège", "lycée"),
+        "transits",
+        363,
+        Seq("transit", "avion", "train"),
         None,
-        "déplacement pour amener ou aller chercher les enfants à leur lien d'éducation ou de garde"
+        "déplacements liés à des transits ferroviaires ou aériens pour des déplacements de longue distance"
+      ),
+      (
+        "animaux",
+        330,
+        Seq(),
+        None,
+        "besoins des animaux"
       )
     )
 

@@ -40,32 +40,32 @@ object PDFBuilder {
       )
       addText(
         content,
-        92,
-        702,
+        119,
+        665,
         s"${data.firstName} ${data.lastName}",
         11
       )
-      addText(content, 92, 684, data.birthDateText, 11)
-      addText(content, 214, 684, data.birthPlace, 11)
+      addText(content, 119, 645, data.birthDateText, 11)
+      addText(content, 312, 645, data.birthPlace, 11)
       addText(
         content,
-        104,
-        665,
+        133,
+        625,
         s"${data.street} ${data.zip} ${data.city}",
         11
       )
-      addText(content, 78, 76, data.city, 11)
+      addText(content, 105, 286, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 63, 58, dateText(auth.output), 11)
-        addText(content, 227, 58, timeText(auth.output), 11)
+        addText(content, 91, 267, dateText(auth.output), 11)
+        addText(content, 312, 267, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _, _) =>
-              addText(content, 47, y, "x", 12)
+              addText(content, 73, y, "x", 12)
           }
         }
       }
-      qrCodeImg.foreach(content.drawImage(_, 439.32f, 25, 92, 92))
+      qrCodeImg.foreach(content.drawImage(_, 439.32f, 125, 92, 92))
 
       content.close()
     }
@@ -80,7 +80,7 @@ object PDFBuilder {
         true,
         true
       )
-      content.drawImage(qrCodeImg, 50, 451.89f, 300, 300)
+      content.drawImage(qrCodeImg, 50, 491.89f, 300, 300)
       content.close()
     }
 
