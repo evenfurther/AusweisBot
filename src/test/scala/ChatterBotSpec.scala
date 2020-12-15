@@ -112,11 +112,11 @@ class ChatterBotSpec extends Specification {
 
     "request and send a PDF on demand" in new WithTestKit {
       withDatabaseEntry()
-      sendCommand("autre", Seq("santé+promenade", s"${hour}h30"))
+      sendCommand("autre", Seq("santé+famille", s"${hour}h30"))
       pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
         case PDFBuilder.BuildPDF(
               `modelData`,
-              Some(Authorization(output, made, Seq("sante", "sport_animaux"))),
+              Some(Authorization(output, made, Seq("sante", "famille"))),
               replyTo
             ) =>
           output.toLocalTime must be equalTo (LocalTime.of(hour, 30))
@@ -132,7 +132,7 @@ class ChatterBotSpec extends Specification {
         "plusieurs motifs simultanément"
       )
       val documentTitle = {
-        f"Sortie santé/promenade ${day.toFrenchDay}%s à ${hour}%02d:30 pour John Doe"
+        f"Sortie santé/famille ${day.toFrenchDay}%s à ${hour}%02d:30 pour John Doe"
       }
       outgoing.expectMessageType[SendFile] match {
         case SendFile(

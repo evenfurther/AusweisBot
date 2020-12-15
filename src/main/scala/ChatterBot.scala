@@ -526,7 +526,7 @@ object ChatterBot {
   private def makeButtons(reasons: Seq[String]): Seq[Seq[String]] = {
     val latestReasons =
       Authorization
-        .unifyReasons(reasons ++ Seq("sport", "courses", "travail"))
+        .unifyReasons(reasons ++ Seq("travail", "animaux", "santé"))
         .take(3)
     Seq(
       latestReasons.map("/" + _),
