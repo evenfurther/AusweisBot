@@ -68,9 +68,9 @@ object Authorization {
       (
         "transits",
         363,
-        Seq("transit", "avion", "train"),
+        Seq("transit", "avion", "train", "bus"),
         None,
-        "déplacements liés à des transits ferroviaires ou aériens pour des déplacements de longue distance"
+        "déplacements liés à des transits ferroviaires, aériens ou en bus pour des déplacements de longue distance"
       ),
       (
         "animaux",
