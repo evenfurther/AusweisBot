@@ -370,7 +370,7 @@ private class ChatterBot(
 
   private[this] def sendButtonsText(reasons: Seq[String] = Seq()): Unit =
     sendText(
-      "Choisissez un certificat à générer (utilisez /help pour l'aide)",
+      "Choisissez une attestation à générer (utilisez /help pour l'aide)",
       makeButtons(reasons)
     )
 
