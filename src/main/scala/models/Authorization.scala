@@ -32,49 +32,49 @@ object Authorization {
       ),
       (
         "sante",
-        508,
-        Seq("soins"),
+        507,
+        Seq("soins", "vaccin"),
         Some("santé"),
-        "rendez-vous de santé ou de soins"
+        "rendez-vous de santé, de soins, de prévention (dont vaccination) ou d'achats de produits de santé"
       ),
       (
         "famille",
-        474,
+        461,
         Seq("enfants"),
         None,
         "motif familial impérieux, visite à des personnes vulnérables, garde d'enfants"
       ),
       (
         "handicap",
-        441,
+        429,
         Seq(),
         None,
         "assistance aux personnes en situation de handicap"
       ),
       (
         "convocation",
-        418,
+        408,
         Seq("administratif", "judiciaire"),
         None,
         "convocation administrative ou judiciaire"
       ),
       (
         "missions",
-        397,
+        386,
         Seq("mission"),
         None,
         "mission pour le compte d'un service public"
       ),
       (
         "transits",
-        363,
+        352,
         Seq("transit", "avion", "train", "bus"),
         None,
         "déplacements liés à des transits ferroviaires, aériens ou en bus pour des déplacements de longue distance"
       ),
       (
         "animaux",
-        330,
+        319,
         Seq(),
         None,
         "besoins des animaux"
