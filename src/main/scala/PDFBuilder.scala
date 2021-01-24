@@ -54,10 +54,10 @@ object PDFBuilder {
         s"${data.street} ${data.zip} ${data.city}",
         11
       )
-      addText(content, 105, 286, data.city, 11)
+      addText(content, 105, 274, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 91, 267, dateText(auth.output), 11)
-        addText(content, 312, 267, timeText(auth.output), 11)
+        addText(content, 91, 255, dateText(auth.output), 11)
+        addText(content, 312, 255, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _, _) =>
