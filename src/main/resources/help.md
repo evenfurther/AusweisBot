@@ -18,8 +18,8 @@ REASONS
 
 - `/santé` : Génère une attestation de sortie pour recevoir des soins
 - `/santé oubli` : Idem daté d'il y a une vingtaine de minutes en cas d'oubli de sauvegarde de l'attestation avant de sortir.
-- `/santé 21h30` : Idem pour une sortie à 11h30.
-- `/autre motifs`, `/autre motifs oubli` ou `/autre motifs 11h30` : Attestation pour un ou plusieurs motifs séparés par `+` (par exemple `/autre famille+handicap 23h30`).
+- `/santé 21h30` : Idem pour une sortie à 21h30.
+- `/autre motifs`, `/autre motifs oubli` ou `/autre motifs 21h30` : Attestation pour un ou plusieurs motifs séparés par `+` (par exemple `/autre famille+handicap 21h30`).
 - `/vierge` : Fournit un formulaire pré-rempli à imprimer, compléter et signer.
 
 Les commandes suivantes permettent de changer certains détails stockés en base de données :
