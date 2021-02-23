@@ -5,9 +5,9 @@ scalaVersion := "2.12.12"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.6.12",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.12",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.12",
+  "com.typesafe.akka" %% "akka-actor" % "2.6.13",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.13",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.13",
   "com.typesafe.akka" %% "akka-http" % "10.2.3",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.35.3",
   "org.apache.pdfbox" % "pdfbox" % "2.0.22",
@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.10.6" % "test",
   "com.google.zxing" % "core" % "3.4.1" % "test",
   "com.google.zxing" % "javase" % "3.4.1" % "test",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.12" % Test
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.13" % Test
 )
 
 assemblyOutputPath in assembly := file("ausweis.jar")
