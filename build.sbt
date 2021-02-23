@@ -24,11 +24,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.13" % Test
 )
 
-assemblyOutputPath in assembly := file("ausweis.jar")
+assembly/assemblyOutputPath  := file("ausweis.jar")
 
-test in assembly := {}
+assembly/test := {}
 
-assemblyMergeStrategy in assembly := {
+assembly/assemblyMergeStrategy := {
   case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
@@ -37,4 +37,4 @@ assemblyMergeStrategy in assembly := {
 
 lazy val genCommands = taskKey[Unit]("Generate commands.txt for BotFather help")
 fullRunTask(genCommands, Compile, "Ausweis", "--gen-commands", "commands.txt")
-fork in genCommands := true
+genCommands/fork := true
