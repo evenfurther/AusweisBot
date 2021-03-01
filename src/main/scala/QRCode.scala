@@ -3,6 +3,7 @@ import javax.imageio.ImageIO
 
 import io.nayuki.qrcodegen.{QrCode, QrSegment}
 import models.{Authorization, PersonalData}
+import org.apache.commons.lang3.StringUtils
 
 import scala.collection.JavaConverters._
 
@@ -49,7 +50,7 @@ object QRCode {
     import utils._
     val reasons =
       Authorization.orderedCanonicalValidReasons(auth.reasons).mkString(", ")
-    s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)
+    val accented = s"""Cree le: ${dateText(auth.made)} a ${timeText(auth.made)
       .replace(':', 'h')}
        |Nom: ${data.lastName}
        |Prenom: ${data.firstName}
@@ -57,5 +58,6 @@ object QRCode {
        |Adresse: ${data.street} ${data.zip} ${data.city}
        |Sortie: ${dateText(auth.output)} a ${timeText(auth.output)}
        |Motifs: $reasons""".stripMargin.linesIterator.mkString(";\n") + ";\n"
+    StringUtils.stripAccents(accented)
   }
 }

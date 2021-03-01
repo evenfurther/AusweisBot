@@ -36,13 +36,13 @@ class QRCodeSpec extends Specification {
   "buildContent" should {
     "generate the expected content" in {
       val data = PersonalData(
-        "John",
-        "Doe",
+        "Jóhn",
+        "Doé",
         LocalDate.of(1970, 2, 3),
         "Montélimar",
-        "1 rue de la Paix",
+        "1 rue de la Paíx",
         "75017",
-        "Paris"
+        "Pàris"
       )
       val auth = Authorization(
         LocalDateTime.of(2021, 3, 4, 5, 6),
@@ -53,7 +53,7 @@ class QRCodeSpec extends Specification {
         data,
         auth
       ) must be equalTo ("Cree le: 02/01/2021 a 08h09;\nNom: Doe;\nPrenom: John;\n"
-        + "Naissance: 03/02/1970 a Montélimar;\nAdresse: 1 rue de la Paix 75017 Paris;\n"
+        + "Naissance: 03/02/1970 a Montelimar;\nAdresse: 1 rue de la Paix 75017 Paris;\n"
         + "Sortie: 04/03/2021 a 05:06;\nMotifs: sante;\n")
     }
 
@@ -61,15 +61,15 @@ class QRCodeSpec extends Specification {
       val data = PersonalData(
         "John",
         "Doe",
-        LocalDate.of(1970, 2, 1),
-        "Paris",
+        LocalDate.of(1970, 2, 3),
+        "Montélimar",
         "1 rue de la paix",
         "75002",
         "Paris"
       )
       val auth = Authorization(
-        LocalDateTime.of(2020, 12, 15, 20, 56),
-        LocalDateTime.of(2020, 12, 15, 14, 48),
+        LocalDateTime.of(2021, 3, 1, 20, 51),
+        LocalDateTime.of(2021, 3, 1, 11, 1),
         Seq("travail")
       )
       val officialBitmap = new BinaryBitmap(
