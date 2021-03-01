@@ -22,10 +22,8 @@ object Authorization {
         "travail",
         579,
         Seq(
-          "concours",
           "examen",
           "formation",
-          "professionnel"
         ),
         None,
         "travail, formation, concours ou examens"
@@ -33,7 +31,7 @@ object Authorization {
       (
         "sante",
         546,
-        Seq("soins", "vaccin"),
+        Seq("soins"),
         Some("santé"),
         "rendez-vous de santé, de soins, de prévention (dont vaccination) ou d'achats de produits de santé"
       ),
@@ -54,7 +52,7 @@ object Authorization {
       (
         "judiciaire",
         459,
-        Seq("administratif", "convocation"),
+        Seq("convocation"),
         None,
         "convocation administrative ou judiciaire"
       ),
@@ -68,7 +66,7 @@ object Authorization {
       (
         "transit",
         404,
-        Seq("avion", "train", "bus"),
+        Seq(),
         None,
         "déplacements liés à des transits ferroviaires, aériens ou en bus pour des déplacements de longue distance"
       ),
@@ -82,7 +80,7 @@ object Authorization {
       (
         "courses",
         304,
-        Seq("achats", "déménagement"),
+        Seq("déménagement"),
         None,
         "(confinement uniquement) achats de fournitures professionnelles ou de première nécessité, retraits de commande, livraison à domicile, déménagement"
       ),
@@ -96,13 +94,13 @@ object Authorization {
       (
         "rassemblement",
         190,
-        Seq("culte", "religion", "manifestation", "réunion"),
+        Seq("religion"),
         None,
         "(confinement uniquement) réunion ou manifestation autorisée sur la voie publique, lieu de culte",
       ),
       ("demarche",
         145,
-        Seq("droit", "public", "avocat"),
+        Seq("droit"),
         Some("démarche"),
         "(confinement uniquement) service public ou professionnel du droit pour un acte qui ne peut se faire à distance")
     )
