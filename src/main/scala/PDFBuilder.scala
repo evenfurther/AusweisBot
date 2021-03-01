@@ -40,32 +40,32 @@ object PDFBuilder {
       )
       addText(
         content,
-        119,
-        665,
-        s"${data.firstName} ${data.lastName}",
+        144,
+        705,
+        StringUtils.stripAccents(s"${data.firstName} ${data.lastName}"),
         11
       )
-      addText(content, 119, 645, data.birthDateText, 11)
-      addText(content, 312, 645, data.birthPlace, 11)
+      addText(content, 144, 684, data.birthDateText, 11)
+      addText(content, 310, 684, StringUtils.stripAccents(data.birthPlace), 11)
       addText(
         content,
-        133,
-        625,
-        s"${data.street} ${data.zip} ${data.city}",
+        148,
+        665,
+        StringUtils.stripAccents(s"${data.street} ${data.zip} ${data.city}"),
         11
       )
-      addText(content, 105, 274, data.city, 11)
+      addText(content, 103, 112, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 91, 255, dateText(auth.output), 11)
-        addText(content, 312, 255, timeText(auth.output), 11)
+        addText(content, 91, 95, dateText(auth.output), 11)
+        addText(content, 310, 95, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _, _) =>
-              addText(content, 73, y, "x", 12)
+              addText(content, 72, y, "x", 12)
           }
         }
       }
-      qrCodeImg.foreach(content.drawImage(_, 439.32f, 125, 92, 92))
+      qrCodeImg.foreach(content.drawImage(_, 488.32f, 660, 82, 82))
 
       content.close()
     }
@@ -80,7 +80,7 @@ object PDFBuilder {
         true,
         true
       )
-      content.drawImage(qrCodeImg, 50, 491.89f, 300, 300)
+      content.drawImage(qrCodeImg, 50, 451.89f, 300, 300)
       content.close()
     }
 
@@ -101,6 +101,9 @@ object PDFBuilder {
     content.beginText()
     content.setFont(PDType1Font.HELVETICA, size)
     content.newLineAtOffset(x, y)
+    // As of 2020-03-01, all accents are supposed to be stripped, but this
+    // has not always been the case in the governement generator and may
+    // return, so let's keep this in place.
     try {
       content.showText(text)
     } catch {

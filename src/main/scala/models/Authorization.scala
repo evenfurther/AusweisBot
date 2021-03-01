@@ -20,65 +20,89 @@ object Authorization {
     Seq(
       (
         "travail",
-        540,
+        579,
         Seq(
-          "concours",
           "examen",
           "formation",
-          "professionnel"
         ),
         None,
         "travail, formation, concours ou examens"
       ),
       (
         "sante",
-        507,
-        Seq("soins", "vaccin"),
+        546,
+        Seq("soins"),
         Some("santé"),
         "rendez-vous de santé, de soins, de prévention (dont vaccination) ou d'achats de produits de santé"
       ),
       (
         "famille",
-        461,
+        512,
         Seq("enfants"),
         None,
         "motif familial impérieux, visite à des personnes vulnérables, garde d'enfants"
       ),
       (
         "handicap",
-        429,
+        478,
         Seq(),
         None,
         "assistance aux personnes en situation de handicap"
       ),
       (
-        "convocation",
-        408,
-        Seq("administratif", "judiciaire"),
+        "judiciaire",
+        459,
+        Seq("convocation"),
         None,
         "convocation administrative ou judiciaire"
       ),
       (
         "missions",
-        386,
+        438,
         Seq("mission"),
         None,
         "mission pour le compte d'un service public"
       ),
       (
-        "transits",
-        352,
-        Seq("transit", "avion", "train", "bus"),
+        "transit",
+        404,
+        Seq(),
         None,
         "déplacements liés à des transits ferroviaires, aériens ou en bus pour des déplacements de longue distance"
       ),
       (
         "animaux",
-        319,
+        370,
         Seq(),
         None,
         "besoins des animaux"
-      )
+      ),
+      (
+        "courses",
+        304,
+        Seq("déménagement"),
+        None,
+        "(confinement uniquement) achats de fournitures professionnelles ou de première nécessité, retraits de commande, livraison à domicile, déménagement"
+      ),
+      (
+        "sport",
+        261,
+        Seq("promenade"),
+        None,
+        "(confinement uniquement) promenade individuelle ou avec les membres du foyer, sport individuel"
+      ),
+      (
+        "rassemblement",
+        190,
+        Seq("religion"),
+        None,
+        "(confinement uniquement) réunion ou manifestation autorisée sur la voie publique, lieu de culte",
+      ),
+      ("demarche",
+        145,
+        Seq("droit"),
+        Some("démarche"),
+        "(confinement uniquement) service public ou professionnel du droit pour un acte qui ne peut se faire à distance")
     )
 
   /** Dictionary mapping reason and reason aliases (for example "santé" and "promenade" are respective aliases of
