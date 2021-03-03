@@ -1,4 +1,6 @@
 import sbt._
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
 
 scalaVersion := "2.12.13"
 
@@ -38,3 +40,11 @@ assembly/assemblyMergeStrategy := {
 lazy val genCommands = taskKey[Unit]("Generate commands.txt for BotFather help")
 fullRunTask(genCommands, Compile, "Ausweis", "--gen-commands", "commands.txt")
 genCommands/fork := true
+
+scalariformAutoformat := true
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(AlignArguments, true)
+  .setPreference(AlignSingleLineCaseStatements, true)
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(SpacesWithinPatternBinders, false)
+  .setPreference(SpacesAroundMultiImports, false)
