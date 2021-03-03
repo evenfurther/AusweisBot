@@ -20,8 +20,7 @@ class QRCodeSpec extends Specification {
     val result = new BufferedImage(
       image.getWidth,
       image.getHeight,
-      BufferedImage.TYPE_BYTE_BINARY
-    )
+      BufferedImage.TYPE_BYTE_BINARY)
     val graphics = result.createGraphics
     graphics.drawImage(image, 0, 0, Color.WHITE, null);
     graphics.dispose()
@@ -30,8 +29,7 @@ class QRCodeSpec extends Specification {
 
   def loadOfficial(): BufferedImage =
     convertToBlackAndWhite(
-      javax.imageio.ImageIO.read(IOUtils.resourceToURL("/official-qrcode.png"))
-    )
+      javax.imageio.ImageIO.read(IOUtils.resourceToURL("/official-qrcode.png")))
 
   "buildContent" should {
     "generate the expected content" in {
@@ -42,17 +40,14 @@ class QRCodeSpec extends Specification {
         "Montélimar",
         "1 rue de la Paíx",
         "75017",
-        "Pàris"
-      )
+        "Pàris")
       val auth = Authorization(
         LocalDateTime.of(2021, 3, 4, 5, 6),
         LocalDateTime.of(2021, 1, 2, 8, 9),
-        Seq("santé")
-      )
+        Seq("santé"))
       QRCode.buildContent(
         data,
-        auth
-      ) must be equalTo ("Cree le: 02/01/2021 a 08h09;\nNom: Doe;\nPrenom: John;\n"
+        auth) must be equalTo ("Cree le: 02/01/2021 a 08h09;\nNom: Doe;\nPrenom: John;\n"
         + "Naissance: 03/02/1970 a Montelimar;\nAdresse: 1 rue de la Paix 75017 Paris;\n"
         + "Sortie: 04/03/2021 a 05:06;\nMotifs: sante;\n")
     }
@@ -65,16 +60,13 @@ class QRCodeSpec extends Specification {
         "Montélimar",
         "1 rue de la paix",
         "75002",
-        "Paris"
-      )
+        "Paris")
       val auth = Authorization(
         LocalDateTime.of(2021, 3, 1, 20, 51),
         LocalDateTime.of(2021, 3, 1, 11, 1),
-        Seq("travail")
-      )
+        Seq("travail"))
       val officialBitmap = new BinaryBitmap(
-        new HybridBinarizer(new BufferedImageLuminanceSource(loadOfficial()))
-      )
+        new HybridBinarizer(new BufferedImageLuminanceSource(loadOfficial())))
       val officialText = new MultiFormatReader().decode(officialBitmap)
       QRCode.buildContent(data, auth) must be equalTo (officialText.getText)
     }
