@@ -28,8 +28,7 @@ class ChatterBotSpec extends Specification {
           user,
           pdfBuilder.ref,
           db.ref,
-          Some(debug.ref)
-        ).startingPoint
+          Some(debug.ref)).startingPoint
       })
 
     override def after: Any = testKit.shutdownTestKit()
@@ -50,8 +49,7 @@ class ChatterBotSpec extends Specification {
       "Lyon",
       "12 rue de la liberté",
       "91842",
-      "Trifouillis-les-Oies"
-    )
+      "Trifouillis-les-Oies")
 
     def withNoDatabaseEntry(): Unit = {
       db.expectMessageType[Load] match {
@@ -82,11 +80,9 @@ class ChatterBotSpec extends Specification {
       outgoing.expectMessageType[SendText].text must contain("/start")
       sendCommand("start")
       outgoing.expectMessageType[SendText].text must contain(
-        "Collecte des données personnelles"
-      )
+        "Collecte des données personnelles")
       outgoing.expectMessageType[SendText].text must contain(
-        "prénom"
-      )
+        "prénom")
     }
 
     "insert data into the database when data collection is done" in new WithTestKit {
@@ -99,8 +95,7 @@ class ChatterBotSpec extends Specification {
         modelData.birthPlace,
         modelData.street,
         modelData.zip,
-        modelData.city
-      )
+        modelData.city)
       db.expectMessage(Save(42, modelData))
     }
 
@@ -115,10 +110,10 @@ class ChatterBotSpec extends Specification {
       sendCommand("autre", Seq("santé+famille", s"${hour}h30"))
       pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
         case PDFBuilder.BuildPDF(
-              `modelData`,
-              Some(Authorization(output, made, Seq("sante", "famille"))),
-              replyTo
-            ) =>
+          `modelData`,
+          Some(Authorization(output, made, Seq("sante", "famille"))),
+          replyTo
+          ) =>
           output.toLocalTime must be equalTo (LocalTime.of(hour, 30))
           val mlt = made.toLocalTime
           mlt.getHour must be equalTo (hour)
@@ -129,17 +124,16 @@ class ChatterBotSpec extends Specification {
           failure
       }
       outgoing.expectMessageType[SendText].text must contain(
-        "plusieurs motifs simultanément"
-      )
+        "plusieurs motifs simultanément")
       val documentTitle = {
         f"Sortie santé/famille ${day.toFrenchDay}%s à ${hour}%02d:30 pour John Doe"
       }
       outgoing.expectMessageType[SendFile] match {
         case SendFile(
-              chatId: ChatId,
-              Contents("attestation.pdf", Array(1, 2, 3)),
-              Some(`documentTitle`)
-            ) =>
+          chatId: ChatId,
+          Contents("attestation.pdf", Array(1, 2, 3)),
+          Some(`documentTitle`)
+          ) =>
           chatId must be equalTo (ChatId(42))
         case s =>
           println(s)
@@ -154,11 +148,10 @@ class ChatterBotSpec extends Specification {
       sendCommand("i")
       db.expectMessage(Delete(42))
       val mod = modelData.copy(
-        firstName = "Sylvie",
-        lastName = "Martin",
-        birthDate = LocalDate.of(2000, 2, 1),
-        birthPlace = "Marseille"
-      )
+        firstName  = "Sylvie",
+        lastName   = "Martin",
+        birthDate  = LocalDate.of(2000, 2, 1),
+        birthPlace = "Marseille")
       sendMessages(mod.firstName, mod.lastName, "1/2/2000", mod.birthPlace)
       db.expectMessage(Save(42, mod))
     }
@@ -169,9 +162,8 @@ class ChatterBotSpec extends Specification {
       db.expectMessage(Delete(42))
       val mod = modelData.copy(
         street = "10 rue du moulin",
-        zip = "75013",
-        city = "Paris"
-      )
+        zip    = "75013",
+        city   = "Paris")
       sendMessages(mod.street, mod.zip, mod.city)
       db.expectMessage(Save(42, mod))
     }
@@ -183,8 +175,7 @@ class ChatterBotSpec extends Specification {
       outgoing.expectMessageType[SendText]
       sendMessage("ABCDE😊FGH")
       outgoing.expectMessageType[SendText].text must contain(
-        "non alphabétiques"
-      )
+        "non alphabétiques")
     }
 
     "explain what the problem is on PDF generation problem" in new WithTestKit {

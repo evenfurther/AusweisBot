@@ -18,12 +18,11 @@ import scala.util.{Failure, Success}
 private class DisabledBot(
     context: ActorContext[BotCommand],
     token: String,
-    debugActor: Option[ActorRef[String]]
-) extends AbstractBehavior[BotCommand](context)
-    with TelegramBot
-    with Polling
-    with IdempotentShutdown
-    with Commands[Future] {
+    debugActor: Option[ActorRef[String]]) extends AbstractBehavior[BotCommand](context)
+  with TelegramBot
+  with Polling
+  with IdempotentShutdown
+  with Commands[Future] {
 
   import Bot._
 
@@ -47,8 +46,7 @@ private class DisabledBot(
     case ConnectionShutdown(Success(_)) =>
       context.log.error("Telegram connection terminated spontaneously")
       throw new IllegalStateException(
-        "Telegram connection terminated spontaneously"
-      )
+        "Telegram connection terminated spontaneously")
     case ConnectionShutdown(Failure(t)) =>
       context.log.error("Telegram connection terminated on error", t)
       throw t
@@ -57,8 +55,7 @@ private class DisabledBot(
         message.from.foreach { user =>
           outgoing ! SendText(
             ChatId(user.id),
-            DisabledBot.noAuthorizationNeeded
-          )
+            DisabledBot.noAuthorizationNeeded)
         }
       }
       Behaviors.same
@@ -90,17 +87,17 @@ private class DisabledBot(
 
 object DisabledBot {
 
-  /** Make a bot connecting to Telegram servers and telling users that they don't need
-    * an authorization anymore.
-    *
-    * @param token the Telegram bot token given by [[https://telegram.me/BotFather BotFather]]
-    * @param debugActor if defined, the actor to send debugging information to
-    * @return
-    */
+  /**
+   * Make a bot connecting to Telegram servers and telling users that they don't need
+   * an authorization anymore.
+   *
+   * @param token the Telegram bot token given by [[https://telegram.me/BotFather BotFather]]
+   * @param debugActor if defined, the actor to send debugging information to
+   * @return
+   */
   def apply(
-      token: String,
-      debugActor: Option[ActorRef[String]]
-  ): Behavior[BotCommand] =
+    token: String,
+    debugActor: Option[ActorRef[String]]): Behavior[BotCommand] =
     Behaviors.setup(new DisabledBot(_, token, debugActor))
 
   private val noAuthorizationNeeded =

@@ -10,14 +10,12 @@ class PersonalDataBuilderSpec extends Specification {
         .of(
           1870,
           4,
-          17
-        ))
+          17))
       PersonalDataBuilder.parseBirthDate("17/4/2030") must be equalTo (LocalDate
         .of(
           2030,
           4,
-          17
-        ))
+          17))
     }
 
     "complete two-digits years" in {
@@ -28,12 +26,8 @@ class PersonalDataBuilderSpec extends Specification {
     }
 
     "fail on invalid dates" in {
-      PersonalDataBuilder.parseBirthDate("1/17/78") must throwA[
-        RuntimeException
-      ]
-      PersonalDataBuilder.parseBirthDate("29/2/1900") must throwA[
-        RuntimeException
-      ]
+      PersonalDataBuilder.parseBirthDate("1/17/78") must throwA[RuntimeException]
+      PersonalDataBuilder.parseBirthDate("29/2/1900") must throwA[RuntimeException]
     }
   }
 
