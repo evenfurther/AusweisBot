@@ -143,6 +143,36 @@ class ChatterBotSpec extends Specification {
       debug.expectMessage(s"""Sent document "$documentTitle"""")
     }
 
+    "accept uppercase reasons" in new WithTestKit {
+      withDatabaseEntry()
+      sendCommand("autre", Seq("Santé+fAmille", s"oUbLi"))
+      pdfBuilder.expectMessageType[PDFBuilder.BuildPDF] match {
+        case PDFBuilder.BuildPDF(
+          `modelData`,
+          Some(Authorization(output, made, Seq("sante", "famille"))),
+          replyTo
+          ) =>
+          replyTo ! Success(Array(1, 2, 3))
+        case s =>
+          failure
+      }
+      outgoing.expectMessageType[SendText].text must contain(
+        "plusieurs motifs simultanément")
+      val documentTitle = outgoing.expectMessageType[SendFile] match {
+        case SendFile(
+          chatId: ChatId,
+          Contents("attestation.pdf", Array(1, 2, 3)),
+          Some(title)
+          ) =>
+          chatId must be equalTo (ChatId(42))
+          title must startWith("Sortie santé/famille")
+          title
+        case s =>
+          failure
+      }
+      debug.expectMessage(s"""Sent document "$documentTitle"""")
+    }
+
     "be able to update identity" in new WithTestKit {
       withDatabaseEntry()
       sendCommand("i")
