@@ -158,8 +158,15 @@ object Bot {
    * @param command the command without the leading /
    * @param args the space-separated command arguments
    */
-  case class PrivateCommand(command: String, args: Seq[String])
+  class PrivateCommand private (val command: String, val args: Seq[String])
     extends PerChatBotCommand
+
+  object PrivateCommand {
+    def apply(command: String, args: Seq[String]): PrivateCommand =
+      new PrivateCommand(command.toLowerCase, args.map(_.toLowerCase))
+
+    def unapply(p: PrivateCommand): Option[(String, Seq[String])] = Some(p.command, p.args)
+  }
 
   /**
    * Private message received for an individual conversation actor
