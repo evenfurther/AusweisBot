@@ -52,10 +52,10 @@ object PDFBuilder {
         665,
         StringUtils.stripAccents(s"${data.street} ${data.zip} ${data.city}"),
         11)
-      addText(content, 103, 112, data.city, 11)
+      addText(content, 103, 99, data.city, 11)
       auth.foreach { auth =>
-        addText(content, 91, 95, dateText(auth.output), 11)
-        addText(content, 310, 95, timeText(auth.output), 11)
+        addText(content, 91, 83, dateText(auth.output), 11)
+        addText(content, 310, 83, timeText(auth.output), 11)
         auth.reasons.foreach { reason =>
           Authorization.reasons.get(reason).foreach {
             case (_, y, _, _) =>

@@ -45,51 +45,51 @@ object Authorization {
         "assistance aux personnes en situation de handicap"),
       (
         "judiciaire",
-        459,
-        Seq("convocation"),
+        460,
+        Seq("convocation", "droit"),
         None,
-        "convocation administrative ou judiciaire"),
+        "convocation administrative ou judiciaire, professionnel du droit pour un acte qui ne peut se faire à distance"),
       (
         "missions",
-        438,
+        410,
         Seq("mission"),
         None,
         "mission pour le compte d'un service public"),
       (
         "transit",
-        404,
+        378,
         Seq(),
         None,
         "déplacements liés à des transits ferroviaires, aériens ou en bus pour des déplacements de longue distance"),
       (
         "animaux",
-        370,
+        343,
         Seq(),
         None,
         "besoins des animaux"),
       (
         "courses",
-        304,
+        280,
         Seq("déménagement"),
         None,
         "(confinement uniquement) achats de fournitures professionnelles ou de première nécessité, retraits de commande, livraison à domicile, déménagement"),
       (
         "sport",
-        261,
+        235,
         Seq("promenade"),
         None,
         "(confinement uniquement) promenade individuelle ou avec les membres du foyer, sport individuel"),
       (
         "rassemblement",
-        190,
+        167,
         Seq("religion"),
         None,
         "(confinement uniquement) réunion ou manifestation autorisée sur la voie publique, lieu de culte"),
       ("demarche",
-        145,
-        Seq("droit"),
+        121,
+        Seq(),
         Some("démarche"),
-        "(confinement uniquement) service public ou professionnel du droit pour un acte qui ne peut se faire à distance"))
+        "(confinement uniquement) service public"))
 
   /**
    * Dictionary mapping reason and reason aliases (for example "santé" and "promenade" are respective aliases of
