@@ -1,10 +1,9 @@
 import mill._
 import mill.scalalib._
 import mill.scalalib.publish._
-import mill.scalajslib._
 import ammonite.ops._
 
-val ScalaVersions = Seq("2.11.12", "2.12.9")
+val ScalaVersions = Seq("2.12.13")
 
 object library {
 
@@ -29,8 +28,6 @@ object library {
     val akkaHttpCors       = "0.4.0"
     val hammock            = "0.9.1"
     val monix              = "3.0.0-RC3"
-    val scalaJs            = "0.6.28"
-    val scalaJsNodeFetch   = "0.4.2"
   }
 
   val akkaHttp           = ivy"com.typesafe.akka::akka-http::${Version.akkaHttp}"
@@ -61,7 +58,6 @@ object library {
   val sttpOkHttp         = ivy"com.softwaremill.sttp::okhttp-backend::${Version.sttp}"
   val slogging           = ivy"biz.enef::slogging::${Version.slogging}"
   val hammock            = ivy"com.pepegar::hammock-core::${Version.hammock}"
-  val scalaJsNodeFetch   = ivy"io.scalajs.npm::node-fetch::${Version.scalaJsNodeFetch}"
 }
 
 trait Bot4sTelegramModule extends CrossScalaModule {
@@ -149,22 +145,6 @@ object core extends Module {
 
   }
 
-  object js extends Cross[CoreJsModule](ScalaVersions: _ *)
-
-  class CoreJsModule(val crossScalaVersion: String) extends Bot4sTelegramCore("js")
-    with ScalaJSModule with Publishable {
-
-    override def ivyDeps = super.ivyDeps() ++ Agg(
-      library.scalaJsNodeFetch
-    )
-
-    def scalaJSVersion = library.Version.scalaJs
-
-    def testFrameworks = Seq("org.scalatest.tools.Framework")
-
-    //object test extends Tests
-  }
-
 }
 
 abstract class Bot4sTelegramAkka extends Bot4sTelegramCrossPlatform("jvm", "akka")
@@ -209,16 +189,6 @@ object examples extends Module {
       library.akkaHttpCors,
       library.sttpOkHttp
     )
-  }
-
-  object js extends Cross[ExamplesJsModule](ScalaVersions: _ *)
-
-  class ExamplesJsModule(val crossScalaVersion: String) extends Bot4sTelegramExamples("js") with ScalaJSModule {
-    override def moduleDeps = super.moduleDeps ++ Seq(core.js())
-
-    def scalaJSVersion = library.Version.scalaJs
-
-    def testFrameworks = Seq("org.scalatest.tools.Framework")
   }
 
   object catsjvm extends Cross[ExamplesCatsModule](ScalaVersions: _*)
