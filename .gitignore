@@ -1,0 +1,35 @@
+*.class
+*.log
+
+# Ensime specific
+.ensime_cache
+.ensime
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# mill
+out/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.idea
+.idea_modules
+
+credentials.*
+
+.DS_Store
+
+#vim specific
+*.swp
+*.swn
+*.swo
