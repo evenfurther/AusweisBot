@@ -25,7 +25,7 @@ class CouchDB(context: ActorContext[DBControl], dbUri: Uri)
   private[this] implicit val system: ActorSystem = context.system.toClassic
   private[this] implicit val ec: ExecutionContext = context.executionContext
   private[this] val http = Http()
-  private[this] def docUri(id: Int): Uri =
+  private[this] def docUri(id: Long): Uri =
     dbUri.withPath(dbUri.path ++ Uri.Path(docId(id)))
 
   override def onMessage(msg: DBControl): Behavior[DBControl] =
@@ -110,5 +110,5 @@ object CouchDB {
 
   private val headers = List(Accept(MediaTypes.`application/json`))
 
-  private def docId(id: Int) = s"telegram-user$id"
+  private def docId(id: Long) = s"telegram-user$id"
 }
