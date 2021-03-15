@@ -44,7 +44,7 @@ case class Update(
       shippingQuery,
       preCheckoutQuery,
       poll
-    ).count(_.isDefined) == 1,
-    "Exactly one of the optional fields should be used"
+    ).count(_.isDefined) <= 1,
+    "Not more than one of the optional fields can be used"
   )
 }
