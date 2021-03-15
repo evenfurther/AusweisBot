@@ -16,6 +16,12 @@ jobs:
           key: ivy2-files
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Setup mill
+        uses: jodersky/setup-mill@master
+        with:
+          mill-version: 0.9.5
+      - name: Publish bot4s/telegram locally
+        run: cd external/bot4s-telegram && mill 'core.jvm[_].publishLocal'
       - name: SBT tests and artifacts
         uses: lokkju/github-action-sbt@master
         with:
