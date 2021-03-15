@@ -32,7 +32,7 @@ private class Bot(
   private[this] implicit val system: ActorSystem = context.system.toClassic
   override val client: RequestHandler[Future] = new AkkaHttpClient(token)
 
-  private[this] val chatters: mutable.Map[Int, ActorRef[PerChatBotCommand]] =
+  private[this] val chatters: mutable.Map[Long, ActorRef[PerChatBotCommand]] =
     mutable.Map()
 
   debugActor.foreach(_ ! "Starting")
@@ -188,7 +188,7 @@ object Bot {
    *
    * @param userId the user identifier
    */
-  case class RequestChatShutdown(userId: Int, reason: String) extends BotCommand
+  case class RequestChatShutdown(userId: Long, reason: String) extends BotCommand
 
   /**
    * Parse incoming textual message into a regular message or a command starting by '/'.

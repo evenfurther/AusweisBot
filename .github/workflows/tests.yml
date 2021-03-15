@@ -16,16 +16,20 @@ jobs:
           key: ivy2-files
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v10
+        with:
+          java-version: "adopt@1.8"
+      - name: Coursier cache
+        uses: coursier/cache-action@v5
       - name: Setup mill
         uses: jodersky/setup-mill@master
         with:
           mill-version: 0.9.5
       - name: Publish bot4s/telegram locally
-        run: cd external/bot4s-telegram && mill 'core.jvm[_].publishLocal'
+        run: cd external/bot4s-telegram && mill '{akka,core}.jvm[_].publishLocal'
       - name: SBT tests and artifacts
-        uses: lokkju/github-action-sbt@master
-        with:
-          commands: test assembly genCommands
+        run: sbt test assembly genCommands
       - name: Upload ausweis.jar artifact
         uses: actions/upload-artifact@v2
         with:

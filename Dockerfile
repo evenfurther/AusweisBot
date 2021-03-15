@@ -8,7 +8,7 @@ ADD project/build.properties project/plugins.sbt /workspace/project/
 RUN cd /workspace/external/bot4s-telegram && \
   wget -q https://github.com/com-lihaoyi/mill/releases/download/0.9.5/0.9.5-assembly && \
   chmod 755 0.9.5-assembly && \
-  ./0.9.5-assembly core.jvm[_].publishLocal
+  ./0.9.5-assembly '{akka,core}.jvm[_].publishLocal'
 RUN cd /workspace && sbt assembly genCommands
 
 FROM openjdk:15-jdk-oracle

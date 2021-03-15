@@ -29,9 +29,10 @@ case class Update(
                    callbackQuery      : Option[CallbackQuery] = None,
                    shippingQuery      : Option[ShippingQuery] = None,
                    preCheckoutQuery   : Option[PreCheckoutQuery] = None,
-                   poll               : Option[Poll] = None
+                   poll               : Option[Poll] = None,
+                   myChatMember       : Option[ChatMemberUpdated] = None,
+                   chatMember         : Option[ChatMemberUpdated] = None
                  ) {
-
   require(
     Seq[Option[_]](
       message,
@@ -43,8 +44,10 @@ case class Update(
       callbackQuery,
       shippingQuery,
       preCheckoutQuery,
-      poll
+      poll,
+      myChatMember,
+      chatMember
     ).count(_.isDefined) <= 1,
-    "Not more than one of the optional fields can be used"
+    "Exactly one of the optional fields should be used"
   )
 }
