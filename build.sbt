@@ -26,6 +26,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.13" % Test
 )
 
+resolvers += Resolver.url("m-k.mx bot4s/telegram shadow", url("https://maven.m-k.mx/"))(Patterns(Resolver.mavenStyleBasePattern))
+
 assembly/assemblyOutputPath  := file("ausweis.jar")
 
 assembly/test := {}
