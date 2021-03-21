@@ -9,6 +9,7 @@ import com.bot4s.telegram.api.RequestHandler
 import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.clients.AkkaHttpClient
 import com.bot4s.telegram.future.{Polling, TelegramBot}
+import com.bot4s.telegram.methods.ParseMode
 import com.bot4s.telegram.models._
 
 import scala.concurrent.Future
@@ -55,7 +56,8 @@ private class DisabledBot(
         message.from.foreach { user =>
           outgoing ! SendText(
             ChatId(user.id),
-            DisabledBot.noAuthorizationNeeded)
+            DisabledBot.disabledMessage,
+            parseMode = Some(ParseMode.Markdown))
         }
       }
       Behaviors.same
@@ -100,11 +102,21 @@ object DisabledBot {
     debugActor: Option[ActorRef[String]]): Behavior[BotCommand] =
     Behaviors.setup(new DisabledBot(_, token, debugActor))
 
-  private val noAuthorizationNeeded =
+  private val disabledMessage =
     """
-      | L'attestation de sortie n'est plus requise à partir du 11 mai 2020. Ce service est donc suspendu
-      | jusqu'à nouvel ordre, en espérant qu'il ne sera plus jamais utile. Toutes les données personnelles
-      | connues à la date de la suspension ont été effacées.
-      |""".stripMargin.replace('\n', ' ')
+      | Les changements permanents de règles et de leur inteprétation auront fini par avoir raison
+      | d'AusweisBot. Le temps et l'énergie nécessaires pour s'adapter aux nouvelles conditions
+      | tout en restant simple d'utilisation excède les ressources raisonnablement mobilisables.
+      | Ce service est suspendu et toutes les données personnelles connues à la date de la suspension
+      | ont été effacées.
+      |
+      | Pour vos besoins d'attestation, vous pouvez utiliser le
+      | [site gouvernemental](https://media.interieur.gouv.fr/attestation-deplacement-derogatoire-covid-19/)
+      | ou l'application [TousAntiCovid](https://www.gouvernement.fr/info-coronavirus/tousanticovid). Cette
+      | dernière permet de générer des attestations que la fonctionalité de tracing bluetooth soit activée
+      | ou non.
+      |
+      | Merci d'avoir utilisé AusweisBot.
+      |""".stripMargin.replace("\n\n ", "¶").replace('\n', ' ').replace("¶", "\n\n")
 
 }
