@@ -3,11 +3,11 @@
 AusweisBot est un logiciel libre permettant de générer
 pendant la pandémie de covid-19 une attestation dérogatoire de
 déplacement en France à travers le réseau de communication
-[Telegram](https://telegram.org). Une instance publique,
+[Telegram](https://telegram.org). <!-- Une instance publique,
 utilisable par tous, est disponible sur Telegram sous le nom
-[@AusweisBot](https://telegram.me/AusweisBot).
+[@AusweisBot](https://telegram.me/AusweisBot). -->
 
-[__Accéder à l'instance publique @AusweisBot en cliquant ici__](https://telegram.me/AusweisBot)
+<!-- [__Accéder à l'instance publique @AusweisBot en cliquant ici__](https://telegram.me/AusweisBot) -->
 
 AusweisBot est écrit en [Scala](https://www.scala-lang.org/) et utilise notamment l'intergiciel
 [Akka](https://akka.io), la bibliothèque [bots4s.telegram](https://github.com/bot4s/telegram),
