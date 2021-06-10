@@ -7,9 +7,9 @@ scalaVersion := "2.12.13"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.6.14",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.14",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.14",
+  "com.typesafe.akka" %% "akka-actor" % "2.6.15",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.15",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.15",
   "com.typesafe.akka" %% "akka-http" % "10.2.4",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.36.0",
   "org.apache.pdfbox" % "pdfbox" % "2.0.23",
@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.12.0" % "test",
   "com.google.zxing" % "core" % "3.4.1" % "test",
   "com.google.zxing" % "javase" % "3.4.1" % "test",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.14" % Test
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.15" % Test
 )
 
 resolvers += Resolver.url("m-k.mx bot4s/telegram shadow", url("https://maven.m-k.mx/"))(Patterns(Resolver.mavenStyleBasePattern))
