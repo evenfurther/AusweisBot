@@ -20,12 +20,13 @@ private class Bot(
     context: ActorContext[BotCommand],
     token: String,
     perChatStarter: PerChatStarter,
-    debugActor: Option[ActorRef[String]]) extends AbstractBehavior[BotCommand](context)
-  with TelegramBot
-  with Polling
-  with IdempotentShutdown
-  with Commands[Future]
-  with ChatActions[Future] {
+    debugActor: Option[ActorRef[String]]
+) extends AbstractBehavior[BotCommand](context)
+    with TelegramBot
+    with Polling
+    with IdempotentShutdown
+    with Commands[Future]
+    with ChatActions[Future] {
 
   import Bot._
 
@@ -48,7 +49,8 @@ private class Bot(
     case ConnectionShutdown(Success(_)) =>
       context.log.error("Telegram connection terminated spontaneously")
       throw new IllegalStateException(
-        "Telegram connection terminated spontaneously")
+        "Telegram connection terminated spontaneously"
+      )
     case ConnectionShutdown(Failure(t)) =>
       context.log.error("Telegram connection terminated on error", t)
       throw t
@@ -68,9 +70,11 @@ private class Bot(
     case InitiateGlobalShutdown =>
       shutdown()
       chatters.values.foreach(
-        _ ! AnnounceShutdown("d'une mise à jour du bot ou du serveur"))
+        _ ! AnnounceShutdown("d'une mise à jour du bot ou du serveur")
+      )
       debugActor.foreach(
-        _ ! s"Shutting down (active sessions: ${chatters.size})")
+        _ ! s"Shutting down (active sessions: ${chatters.size})"
+      )
       // Wait for some time before starting termination in order to let
       // the debug message get through. Reuse the same message.
       Behaviors.withTimers { timers =>
@@ -100,7 +104,8 @@ private class Bot(
     }
 
   private[this] def findOrSpawnChatterBot(
-    user: User): ActorRef[PerChatBotCommand] = {
+      user: User
+  ): ActorRef[PerChatBotCommand] = {
     val ref = chatters.getOrElseUpdate(
       user.id, {
         val chatter = context.spawnAnonymous(
@@ -108,10 +113,13 @@ private class Bot(
             user,
             request,
             context.self.narrow[RequestChatShutdown],
-            debugActor))
+            debugActor
+          )
+        )
         context.watchWith(chatter, RequestChatShutdown(user.id, "termination"))
         chatter
-      })
+      }
+    )
     ref
   }
 
@@ -125,21 +133,31 @@ private class Bot(
 
 object Bot {
 
-  type PerChatStarter = (User, RequestHandler[Future], ActorRef[RequestChatShutdown], Option[ActorRef[String]]) => Behavior[PerChatBotCommand]
+  type PerChatStarter = (
+      User,
+      RequestHandler[Future],
+      ActorRef[RequestChatShutdown],
+      Option[ActorRef[String]]
+  ) => Behavior[PerChatBotCommand]
 
-  /**
-   * Make a bot connecting to Telegram servers and handling conversations from users by
-   * dispatching input to actors created by `perChatStarter` on demand.
-   *
-   * @param token the Telegram bot token given by [[https://telegram.me/BotFather BotFather]]
-   * @param perChatStarter function to create individual conversation bots
-   * @param debugActor if defined, the actor to send debugging information to
-   * @return
-   */
+  /** Make a bot connecting to Telegram servers and handling conversations from
+    * users by dispatching input to actors created by `perChatStarter` on
+    * demand.
+    *
+    * @param token
+    *   the Telegram bot token given by
+    *   [[https://telegram.me/BotFather BotFather]]
+    * @param perChatStarter
+    *   function to create individual conversation bots
+    * @param debugActor
+    *   if defined, the actor to send debugging information to
+    * @return
+    */
   def apply(
-    token: String,
-    perChatStarter: PerChatStarter,
-    debugActor: Option[ActorRef[String]]): Behavior[BotCommand] =
+      token: String,
+      perChatStarter: PerChatStarter,
+      debugActor: Option[ActorRef[String]]
+  ): Behavior[BotCommand] =
     Behaviors.setup(new Bot(_, token, perChatStarter, debugActor))
 
   sealed trait BotCommand
@@ -147,57 +165,60 @@ object Bot {
   case class ConnectionShutdown(res: Try[Unit]) extends BotCommand
   case object InitiateGlobalShutdown extends BotCommand
 
-  /**
-   * The base of message received during a private conversation by the bot
-   */
+  /** The base of message received during a private conversation by the bot
+    */
   sealed trait PerChatBotCommand
 
-  /**
-   * Private command received for an individual conversation actor
-   *
-   * @param command the command without the leading /
-   * @param args the space-separated command arguments
-   */
+  /** Private command received for an individual conversation actor
+    *
+    * @param command
+    *   the command without the leading /
+    * @param args
+    *   the space-separated command arguments
+    */
   class PrivateCommand private (val command: String, val args: Seq[String])
-    extends PerChatBotCommand
+      extends PerChatBotCommand
 
   object PrivateCommand {
     def apply(command: String, args: Seq[String]): PrivateCommand =
       new PrivateCommand(command.toLowerCase, args.map(_.toLowerCase))
 
-    def unapply(p: PrivateCommand): Option[(String, Seq[String])] = Some(p.command, p.args)
+    def unapply(p: PrivateCommand): Option[(String, Seq[String])] =
+      Some(p.command, p.args)
   }
 
-  /**
-   * Private message received for an individual conversation actor
-   *
-   * @param data the textual message
-   */
+  /** Private message received for an individual conversation actor
+    *
+    * @param data
+    *   the textual message
+    */
   case class PrivateMessage(data: String) extends PerChatBotCommand
 
-  /**
-   * Request that the chat bot is shut down
-   *
-   * @param reason the reason for the shut down
-   */
+  /** Request that the chat bot is shut down
+    *
+    * @param reason
+    *   the reason for the shut down
+    */
   case class AnnounceShutdown(reason: String) extends PerChatBotCommand
 
-  /**
-   * Request that a particular conversation actor is shutdown. The corresponding
-   * actor will be stopped.
-   *
-   * @param userId the user identifier
-   */
-  case class RequestChatShutdown(userId: Long, reason: String) extends BotCommand
+  /** Request that a particular conversation actor is shutdown. The
+    * corresponding actor will be stopped.
+    *
+    * @param userId
+    *   the user identifier
+    */
+  case class RequestChatShutdown(userId: Long, reason: String)
+      extends BotCommand
 
-  /**
-   * Parse incoming textual message into a regular message or a command starting by '/'.
-   *
-   * @param text the incoming textual message
-   * @return a `Text` or `Command` object
-   */
-  private def parseText(
-    text: String): PerChatBotCommand = {
+  /** Parse incoming textual message into a regular message or a command
+    * starting by '/'.
+    *
+    * @param text
+    *   the incoming textual message
+    * @return
+    *   a `Text` or `Command` object
+    */
+  private def parseText(text: String): PerChatBotCommand = {
     // The Telegram client sends unicode test in any form. We use NFC
     // because more accented characters are thus accepted in the PDF.
     // Also, because most Telegram clients automatically transform
