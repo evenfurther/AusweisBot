@@ -26,13 +26,16 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.15" % Test
 )
 
-resolvers += Resolver.url("m-k.mx bot4s/telegram shadow", url("https://maven.m-k.mx/"))(Patterns(Resolver.mavenStyleBasePattern))
+resolvers += Resolver.url(
+  "m-k.mx bot4s/telegram shadow",
+  url("https://maven.m-k.mx/")
+)(Patterns(Resolver.mavenStyleBasePattern))
 
-assembly/assemblyOutputPath  := file("ausweis.jar")
+assembly / assemblyOutputPath := file("ausweis.jar")
 
-assembly/test := {}
+assembly / test := {}
 
-assembly/assemblyMergeStrategy := {
+assembly / assemblyMergeStrategy := {
   case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
@@ -41,7 +44,7 @@ assembly/assemblyMergeStrategy := {
 
 lazy val genCommands = taskKey[Unit]("Generate commands.txt for BotFather help")
 fullRunTask(genCommands, Compile, "Ausweis", "--gen-commands", "commands.txt")
-genCommands/fork := true
+genCommands / fork := true
 
 scalariformAutoformat := true
 ScalariformKeys.preferences := ScalariformKeys.preferences.value
