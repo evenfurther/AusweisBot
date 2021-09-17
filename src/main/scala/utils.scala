@@ -23,25 +23,27 @@ object utils {
       ("privacy", "politique de traitement des données personnells"),
       (
         "data",
-        "liste les données personnelles enregistrées dans la base de données"),
+        "liste les données personnelles enregistrées dans la base de données"
+      ),
       ("vierge", "génère une attestation pré-remplie à signer"),
       (
         "autre",
         "suivi d'une liste de motifs séparés par des + (sans espace), " +
-        "et éventuellement d'une heure ou du mot « oubli »"),
+          "et éventuellement d'une heure ou du mot « oubli »"
+      ),
       ("a", "met à jour l'adresse en conservant l'identité enregistrée"),
-      ("i", "met à jour l'identité en conservant l'adresse enregistrée"))
+      ("i", "met à jour l'identité en conservant l'adresse enregistrée")
+    )
     val actions = models.Authorization.reasons
-      .map {
-        case (action, (_, _, _, help)) =>
-          (
-            action,
-            s"$help (peut-être suivi d'une heure de sortie ou du mot « oubli »)")
+      .map { case (action, (_, _, _, help)) =>
+        (
+          action,
+          s"$help (peut-être suivi d'une heure de sortie ou du mot « oubli »)"
+        )
       }
       .filter(a => StringUtils.isAsciiPrintable(a._1))
-    (commands ++ actions).sorted.map {
-      case (c, h) =>
-        s"$c - $h\n"
+    (commands ++ actions).sorted.map { case (c, h) =>
+      s"$c - $h\n"
     }.mkString
   }
 
@@ -49,7 +51,8 @@ object utils {
     IOUtils.write(
       generateCommandListForBotFather(),
       new FileOutputStream(new File(fileName)),
-      "UTF-8")
+      "UTF-8"
+    )
   }
 
 }

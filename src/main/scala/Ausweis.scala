@@ -35,7 +35,8 @@ object Ausweis extends App {
         utils.saveCommandListForBotFather(args(1))
       case _ =>
         throw new IllegalArgumentException(
-          "--gen-commands takes 0 or more arguments")
+          "--gen-commands takes 0 or more arguments"
+        )
     }
     System.exit(0)
   }
@@ -55,13 +56,10 @@ object Ausweis extends App {
   // Fill global configuration
   GlobalConfig.help = Some {
     val reasons: String = Authorization.reasonsAndAliases.zipWithIndex
-      .map {
-        case ((reason, aliases, help), i) =>
-          s"- Case ${i + 1} : /${StringUtils.stripAccents(reason)}${
-            if (aliases.nonEmpty)
-              s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
-            else ""
-          } - $help"
+      .map { case ((reason, aliases, help), i) =>
+        s"- Case ${i + 1} : /${StringUtils.stripAccents(reason)}${if (aliases.nonEmpty)
+          s" (ou ${aliases.map(a => s"`/$a`").mkString(", ")})"
+        else ""} - $help"
       }
       .mkString("\n")
     IOUtils
@@ -71,7 +69,8 @@ object Ausweis extends App {
   GlobalConfig.privacyPolicy = Some(
     IOUtils
       .resourceToString("/privacy.md", Charset.forName("UTF-8"))
-      .replaceAll("CONTACT-EMAIL", ausweisConfig.getString("contact-email")))
+      .replaceAll("CONTACT-EMAIL", ausweisConfig.getString("contact-email"))
+  )
 
   // Main actor behavior, with no command
   val mainBehavior: Behavior[NotUsed] = Behaviors.setup { context =>
@@ -83,9 +82,12 @@ object Ausweis extends App {
           .supervise(
             DebugBot(
               ausweisConfig.getString("debug.telegram-token"),
-              ChatId(ausweisConfig.getInt("debug.chat-id"))))
+              ChatId(ausweisConfig.getInt("debug.chat-id"))
+            )
+          )
           .onFailure[Throwable](SupervisorStrategy.restart),
-        "debug")
+        "debug"
+      )
       Some(ref)
     } else {
       None
@@ -109,8 +111,10 @@ object Ausweis extends App {
         .onFailure[Throwable](
           SupervisorStrategy
             .restartWithBackoff(5.seconds, 30.seconds, 0.2)
-            .withResetBackoffAfter(5.minutes)),
-      "ausweis-bot")
+            .withResetBackoffAfter(5.minutes)
+        ),
+      "ausweis-bot"
+    )
     context.watch(bot)
 
     // Catch SIGINT and SIGTERM, and start a proper shutdown procedure that
@@ -123,53 +127,59 @@ object Ausweis extends App {
     Signal.handle(new Signal("INT"), signalHandler)
     Signal.handle(new Signal("TERM"), signalHandler)
 
-    Behaviors.receiveSignal {
-      case (context, Terminated(_)) =>
-        context.log.info("Main bot actor terminated, terminating ActorSystem")
-        Behaviors.stopped
+    Behaviors.receiveSignal { case (context, Terminated(_)) =>
+      context.log.info("Main bot actor terminated, terminating ActorSystem")
+      Behaviors.stopped
     }
   }
 
   ActorSystem(mainBehavior, "guardian")
 
   private def fullFeaturedBehavior(
-    context: ActorContext[NotUsed],
-    botToken: String,
-    debugActor: Option[ActorRef[String]]) = {
+      context: ActorContext[NotUsed],
+      botToken: String,
+      debugActor: Option[ActorRef[String]]
+  ) = {
     // PDF builder actor
     val pdfBuilder = {
       context.spawn(
         Behaviors
           .supervise(PDFBuilder.makeActor())
           .onFailure[Throwable](SupervisorStrategy.restart),
-        "PDF-builder")
+        "PDF-builder"
+      )
     }
     // CouchDB database actor
     val db = context.spawn(
       Behaviors
         .supervise(CouchDB(ausweisConfig.getString("database")))
         .onFailure[Throwable](SupervisorStrategy.restart),
-      name = "CouchDB")
+      name = "CouchDB"
+    )
     // Starter for new actors in charge of an individual conversation
     // with a Telegram user. Stop an actor after it has been idle for
     // 15 minutes. It may cause data loss if someone is entering their
     // information and makes a pause for 15 minutes right in the middle,
     // but this is supposed to be an interactive service.
     val perChatStarter: PerChatStarter = (
-      user: User,
-      client: RequestHandler[Future],
-      parent: ActorRef[Bot.RequestChatShutdown],
-      debugActor: Option[ActorRef[String]]) =>
+        user: User,
+        client: RequestHandler[Future],
+        parent: ActorRef[Bot.RequestChatShutdown],
+        debugActor: Option[ActorRef[String]]
+    ) =>
       ChatterBot(client, user, pdfBuilder, db, debugActor)
         .withIdleTimeout(
           15.minutes,
           parent,
-          Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")) // Main bot.
+          Bot.RequestChatShutdown(user.id, "d'inactivité de votre part")
+        ) // Main bot.
         .withThrottling(
           FiniteDuration(
             ausweisConfig.getDuration("inter-request-delay").toNanos,
-            TimeUnit.NANOSECONDS),
-          ausweisConfig.getInt("max-queued-requests"))
+            TimeUnit.NANOSECONDS
+          ),
+          ausweisConfig.getInt("max-queued-requests")
+        )
     Bot(botToken, perChatStarter, debugActor)
   }
 }
