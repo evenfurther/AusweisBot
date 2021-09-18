@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % "2.6.15",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.6.15",
   "com.typesafe.akka" %% "akka-http" % "10.2.6",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.37.0",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.38.2",
   "org.apache.pdfbox" % "pdfbox" % "2.0.24",
   "io.nayuki" % "qrcodegen" % "1.6.0",
   "commons-io" % "commons-io" % "2.11.0",
