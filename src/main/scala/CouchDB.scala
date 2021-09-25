@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 // Mini CouchDB interface implementing only document saving, querying and deleting.
 
 class CouchDB(context: ActorContext[DBControl], dbUri: Uri)
-  extends AbstractBehavior[DBControl](context) {
+    extends AbstractBehavior[DBControl](context) {
 
   import CouchDB._
 
@@ -37,35 +37,44 @@ class CouchDB(context: ActorContext[DBControl], dbUri: Uri)
               HttpMethods.PUT,
               docUri(id),
               headers = headers,
-              entity  = model.HttpEntity(
+              entity = model.HttpEntity(
                 ContentTypes.`application/json`,
                 Json.stringify(
                   Json.toJsObject(data) ++ Json.obj(
                     "insertedAt" -> ZonedDateTime
                       .now(ZoneId.of("UTC"))
-                      .toInstant())))))
+                      .toInstant()
+                  )
+                )
+              )
+            )
+          )
           .foreach(_.discardEntityBytes())
         Behaviors.same
       case Load(id, replyTo) =>
         context.pipeToSelf(
           http
             .singleRequest(
-              HttpRequest(HttpMethods.GET, docUri(id), headers = headers))
+              HttpRequest(HttpMethods.GET, docUri(id), headers = headers)
+            )
             .flatMap { response =>
               if (response.status.isSuccess) {
                 response.entity
                   .toStrict(5.seconds)
                   .map(body =>
                     Some(
-                      Json.parse(body.data.toArray).validate[PersonalData].get))
+                      Json.parse(body.data.toArray).validate[PersonalData].get
+                    )
+                  )
               } else {
                 response.discardEntityBytes()
                 Future.successful(None)
               }
-            }) {
-            case Success(reply) => SendReply(replyTo, reply)
-            case Failure(_)     => SendReply(replyTo, None)
-          }
+            }
+        ) {
+          case Success(reply) => SendReply(replyTo, reply)
+          case Failure(_)     => SendReply(replyTo, None)
+        }
         Behaviors.same
       case Delete(id) =>
         // To prevent a conflict, CouchDB requires the revision string before
@@ -87,8 +96,12 @@ class CouchDB(context: ActorContext[DBControl], dbUri: Uri)
                           "rev" -> etag
                             .value()
                             .stripPrefix("\"")
-                            .stripSuffix("\""))),
-                      headers = headers))
+                            .stripSuffix("\"")
+                        )
+                      ),
+                      headers = headers
+                    )
+                  )
                   .foreach(_.discardEntityBytes())
               }
             }
