@@ -13,17 +13,16 @@ case class PersonalData(
     birthPlace: String,
     street: String,
     zip: String,
-    city: String) {
+    city: String
+) {
 
-  /**
-   * The birth text as formatted on the official form (without leading 0)
-   */
+  /** The birth text as formatted on the official form (without leading 0)
+    */
   val birthDateText: String =
     birthDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
-  /**
-   * A textual representation of the full name
-   */
+  /** A textual representation of the full name
+    */
   val fullName: String = s"$firstName $lastName"
 }
 
