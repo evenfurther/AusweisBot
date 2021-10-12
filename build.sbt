@@ -2,7 +2,7 @@ import sbt._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
-scalaVersion := "2.12.14"
+scalaVersion := "2.12.15"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % "2.6.15",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.6.15",
   "com.typesafe.akka" %% "akka-http" % "10.2.6",
-  "de.heikoseeberger" %% "akka-http-play-json" % "1.37.0",
+  "de.heikoseeberger" %% "akka-http-play-json" % "1.38.2",
   "org.apache.pdfbox" % "pdfbox" % "2.0.24",
   "io.nayuki" % "qrcodegen" % "1.6.0",
   "commons-io" % "commons-io" % "2.11.0",
@@ -26,13 +26,16 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.15" % Test
 )
 
-resolvers += Resolver.url("m-k.mx bot4s/telegram shadow", url("https://maven.m-k.mx/"))(Patterns(Resolver.mavenStyleBasePattern))
+resolvers += Resolver.url(
+  "m-k.mx bot4s/telegram shadow",
+  url("https://maven.m-k.mx/")
+)(Patterns(Resolver.mavenStyleBasePattern))
 
-assembly/assemblyOutputPath  := file("ausweis.jar")
+assembly / assemblyOutputPath := file("ausweis.jar")
 
-assembly/test := {}
+assembly / test := {}
 
-assembly/assemblyMergeStrategy := {
+assembly / assemblyMergeStrategy := {
   case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
@@ -41,7 +44,7 @@ assembly/assemblyMergeStrategy := {
 
 lazy val genCommands = taskKey[Unit]("Generate commands.txt for BotFather help")
 fullRunTask(genCommands, Compile, "Ausweis", "--gen-commands", "commands.txt")
-genCommands/fork := true
+genCommands / fork := true
 
 scalariformAutoformat := true
 ScalariformKeys.preferences := ScalariformKeys.preferences.value

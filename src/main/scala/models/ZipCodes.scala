@@ -10,17 +10,18 @@ import scala.collection.mutable
 
 object ZipCodes {
 
-  /**
-   * Dictionary mapping a zip code to a list of cities sharing the zip code.
-   * A single zip code can correspond to multiple cities, and the same city
-   * can have several zip codes (Paris, Lyon, Marseille).
-   *
-   * It uses the database retrieved from [[https://sql.sh/736-base-donnees-villes-francaises]]
-   * which is under the CC-BY-SA-4.0 license.
-   */
+  /** Dictionary mapping a zip code to a list of cities sharing the zip code. A
+    * single zip code can correspond to multiple cities, and the same city can
+    * have several zip codes (Paris, Lyon, Marseille).
+    *
+    * It uses the database retrieved from
+    * [[https://sql.sh/736-base-donnees-villes-francaises]] which is under the
+    * CC-BY-SA-4.0 license.
+    */
   val fromZipCodes: Map[String, Seq[String]] = {
     val fileContent = new StringReader(
-      IOUtils.resourceToString("/villes_france.csv", Charset.forName("UTF-8")))
+      IOUtils.resourceToString("/villes_france.csv", Charset.forName("UTF-8"))
+    )
     val reader = CSVReader.open(fileContent)
     var zipCodes: mutable.Map[String, Seq[String]] = mutable.Map()
     for (

@@ -14,12 +14,14 @@ class PDFBuilderSpec extends Specification {
     "Lisbonne (Portugal)",
     "1 rue de la Paix",
     "91120",
-    "Palaiseau")
+    "Palaiseau"
+  )
 
   val auth = Authorization(
     LocalDateTime.of(2020, 11, 3, 17, 4),
     LocalDateTime.of(2020, 11, 3, 17, 3),
-    Seq("travail"))
+    Seq("travail")
+  )
 
   val beAValidPDF: Matcher[Array[Byte]] = { b: Array[Byte] =>
     try {
@@ -41,7 +43,8 @@ class PDFBuilderSpec extends Specification {
       val birthPlace = "ABC😊DEF"
       val d = data.copy(birthPlace = birthPlace)
       Try { PDFBuilder.buildPDF(d, Some(auth)) } should beEqualTo(
-        Failure(PDFBuilder.NonPrintable(birthPlace)))
+        Failure(PDFBuilder.NonPrintable(birthPlace))
+      )
     }
 
     "return an empty model if requested" in {
