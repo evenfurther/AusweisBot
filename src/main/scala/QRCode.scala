@@ -59,8 +59,11 @@ object QRCode {
                       |Prenom: ${data.firstName}
                       |Naissance: ${data.birthDateText} a ${data.birthPlace}
                       |Adresse: ${data.street} ${data.zip} ${data.city}
-                      |Sortie: ${dateText(auth.output)} a ${timeText(auth.output)}
-                      |Motifs: $reasons""".stripMargin.linesIterator.mkString(";\n") + ";\n"
+                      |Sortie: ${dateText(auth.output)} a ${timeText(
+      auth.output
+    )}
+                      |Motifs: $reasons""".stripMargin.linesIterator
+      .mkString(";\n") + ";\n"
     StringUtils.stripAccents(accented)
   }
 }
