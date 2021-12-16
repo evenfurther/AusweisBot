@@ -7,10 +7,10 @@ scalaVersion := "2.12.15"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.6.17",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.17",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.17",
-  "com.typesafe.akka" %% "akka-http" % "10.2.6",
+  "com.typesafe.akka" %% "akka-actor" % "2.6.16",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.16",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.16",
+  "com.typesafe.akka" %% "akka-http" % "10.2.7",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.38.2",
   "org.apache.pdfbox" % "pdfbox" % "2.0.24",
   "io.nayuki" % "qrcodegen" % "1.6.0",
@@ -18,9 +18,9 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-lang3" % "3.12.0",
   "com.bot4s" %% "telegram-core" % "4.4.0-RC2-fix5",
   "com.bot4s" %% "telegram-akka" % "4.4.0-RC2-fix5",
-  "ch.qos.logback" % "logback-classic" % "1.2.6",
+  "ch.qos.logback" % "logback-classic" % "1.2.8",
   "com.github.tototoshi" %% "scala-csv" % "1.3.8",
-  "org.specs2" %% "specs2-core" % "4.12.4" % "test",
+  "org.specs2" %% "specs2-core" % "4.12.12" % "test",
   "com.google.zxing" % "core" % "3.4.1" % "test",
   "com.google.zxing" % "javase" % "3.4.1" % "test",
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.17" % Test
