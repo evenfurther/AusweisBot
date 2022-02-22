@@ -38,7 +38,7 @@ assembly / test := {}
 assembly / assemblyMergeStrategy := {
   case "module-info.class" => MergeStrategy.discard // Necessary for jackson
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly/assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
