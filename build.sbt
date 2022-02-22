@@ -10,7 +10,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.6.18",
   "com.typesafe.akka" %% "akka-stream" % "2.6.18",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.6.18",
-  "com.typesafe.akka" %% "akka-http" % "10.2.7",
+  "com.typesafe.akka" %% "akka-http" % "10.2.8",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.apache.pdfbox" % "pdfbox" % "2.0.25",
   "io.nayuki" % "qrcodegen" % "1.6.0",
@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "com.bot4s" %% "telegram-akka" % "4.4.0-RC2-fix5",
   "ch.qos.logback" % "logback-classic" % "1.2.10",
   "com.github.tototoshi" %% "scala-csv" % "1.3.10",
-  "org.specs2" %% "specs2-core" % "4.13.1" % "test",
+  "org.specs2" %% "specs2-core" % "4.13.3" % "test",
   "com.google.zxing" % "core" % "3.4.1" % "test",
   "com.google.zxing" % "javase" % "3.4.1" % "test",
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.18" % Test
