@@ -34,8 +34,7 @@ private class ChatterBot(
     user: User,
     pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
     db: ActorRef[DBCommand],
-    debugActor: Option[ActorRef[String]]
-) {
+    debugActor: Option[ActorRef[String]]) {
 
   import ChatterBot._
 
@@ -43,40 +42,39 @@ private class ChatterBot(
     context.executionContext
   private[this] implicit val timeout: Timeout = 5.seconds
 
-  /** Send a message to the user.
-    *
-    * @param text
-    *   the message to send
-    * @param keyboard
-    *   the content of the keyboard to display, grouped by rows
-    */
+  /**
+   * Send a message to the user.
+   *
+   * @param text
+   *   the message to send
+   * @param keyboard
+   *   the content of the keyboard to display, grouped by rows
+   */
   private[this] def sendText(
-      text: String,
-      keyboard: Seq[Seq[String]] = Seq(),
-      parseMode: Option[ParseMode] = None
-  ): Unit =
+    text: String,
+    keyboard: Seq[Seq[String]] = Seq(),
+    parseMode: Option[ParseMode] = None): Unit =
     outgoing ! SendText(ChatId(user.id), text, keyboard, parseMode)
 
-  /** Send a PDF file to the user. The user will be presented with the "bot is
-    * uploading a file" notification in Telegram.
-    *
-    * @param content
-    *   the file content to send
-    * @param caption
-    *   if defined, the caption to display to the user
-    */
+  /**
+   * Send a PDF file to the user. The user will be presented with the "bot is
+   * uploading a file" notification in Telegram.
+   *
+   * @param content
+   *   the file content to send
+   * @param caption
+   *   if defined, the caption to display to the user
+   */
   private[this] def sendCertificate(
-      content: Array[Byte],
-      caption: Option[String] = None
-  ): Unit = {
+    content: Array[Byte],
+    caption: Option[String] = None): Unit = {
     val doc = caption.getOrElse("without a title")
     context.log.info(s"""Sent document "$doc"""")
     debugActor.foreach(_ ! s"""Sent document "$doc"""")
     outgoing ! SendFile(
       ChatId(user.id),
       InputFile("attestation.pdf", content),
-      caption
-    )
+      caption)
   }
 
   // Start by requesting stored data about the user. We treat an error
@@ -89,14 +87,15 @@ private class ChatterBot(
       case _                   => NoCachedData
     }
 
-  /** The start of the bot logic is here. We will first wait for the data to
-    * arrive from the database and then switch to the `handleCommands` behavior.
-    * If we could not get data about this user, because of nothing is stored in
-    * the database or if there was a database error, we only handle common
-    * commands such as `/help`, `/privacy` or `/data` until the user enters
-    * `/start` to start data collection in which case we branch to
-    * `requestData`.
-    */
+  /**
+   * The start of the bot logic is here. We will first wait for the data to
+   * arrive from the database and then switch to the `handleCommands` behavior.
+   * If we could not get data about this user, because of nothing is stored in
+   * the database or if there was a database error, we only handle common
+   * commands such as `/help`, `/privacy` or `/data` until the user enters
+   * `/start` to start data collection in which case we branch to
+   * `requestData`.
+   */
   val startingPoint: Behavior[ChatterBotControl] = {
     Behaviors.withStash[ChatterBotControl](10) { buffer =>
       Behaviors.receiveMessage {
@@ -111,8 +110,7 @@ private class ChatterBot(
               Behaviors.same
             case FromMainBot(PrivateCommand("data", _)) =>
               sendText(
-                s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}"
-              )
+                s"Je ne connais que votre numéro unique Telegram à ce stade : ${user.id}")
               Behaviors.same
             case FromMainBot(PrivateCommand("help", _)) =>
               help()
@@ -133,35 +131,34 @@ private class ChatterBot(
     }
   }
 
-  /** Common handler for the `/start` function. When we arrive here, either we
-    * previously didn't find data about the user in the database or the data was
-    * explicitely deleted using the `/start` command.
-    *
-    * @param dataBuilder
-    *   the initial data to start from
-    * @return
-    *   the `requestData` behavior with empty data
-    */
+  /**
+   * Common handler for the `/start` function. When we arrive here, either we
+   * previously didn't find data about the user in the database or the data was
+   * explicitely deleted using the `/start` command.
+   *
+   * @param dataBuilder
+   *   the initial data to start from
+   * @return
+   *   the `requestData` behavior with empty data
+   */
   private[this] def handleStart(
-      dataBuilder: PersonalDataBuilder
-  ): Behavior[ChatterBotControl] = {
+    dataBuilder: PersonalDataBuilder): Behavior[ChatterBotControl] = {
     sendText(
-      "Collecte des données personnelles - vous pourrez les effacer en refaisant /start et contrôler ce qui est connu en utilisant /data"
-    )
+      "Collecte des données personnelles - vous pourrez les effacer en refaisant /start et contrôler ce qui est connu en utilisant /data")
     requestData(dataBuilder)
   }
 
-  /** Collect data about the user.
-    *
-    * @param textualData
-    *   the data we have so far in the same order as the
-    *   [[models.PersonalData PersonalData]] case class
-    * @return
-    *   the behavior to handle user input
-    */
+  /**
+   * Collect data about the user.
+   *
+   * @param textualData
+   *   the data we have so far in the same order as the
+   *   [[models.PersonalData PersonalData]] case class
+   * @return
+   *   the behavior to handle user input
+   */
   private[this] def requestData(
-      dataBuilder: PersonalDataBuilder
-  ): Behavior[ChatterBotControl] = {
+    dataBuilder: PersonalDataBuilder): Behavior[ChatterBotControl] = {
     val (fieldText, fieldSuggestions, fieldSetter) =
       dataBuilder.firstMissingField
     sendText(
@@ -180,31 +177,26 @@ private class ChatterBot(
         requestData(dataBuilder)
       case FromMainBot(PrivateCommand("data", _)) =>
         sendText(
-          s"À ce stade, je connais les informations suivantes (non stockées) :\n$dataBuilder\n- Numéro unique Telegram : ${user.id}"
-        )
+          s"À ce stade, je connais les informations suivantes (non stockées) :\n$dataBuilder\n- Numéro unique Telegram : ${user.id}")
         requestData(dataBuilder)
       case FromMainBot(PrivateCommand("help", _)) =>
         help()
         requestData(dataBuilder)
       case FromMainBot(PrivateCommand("i", Seq())) =>
         requestData(
-          dataBuilder.strip(StripIdentity, user.firstName, user.lastName)
-        )
+          dataBuilder.strip(StripIdentity, user.firstName, user.lastName))
       case FromMainBot(PrivateCommand("a", Seq())) =>
         requestData(
-          dataBuilder.strip(StripAddress, user.firstName, user.lastName)
-        )
+          dataBuilder.strip(StripAddress, user.firstName, user.lastName))
       case FromMainBot(PrivateCommand(_, _)) =>
         sendText(
-          "Impossible de lancer une commande tant que les informations ne sont pas disponibles"
-        )
+          "Impossible de lancer une commande tant que les informations ne sont pas disponibles")
         requestData(dataBuilder)
       case FromMainBot(PrivateMessage(text)) =>
         if (!utils.isAcceptableString(text))
           sendText(
             "Attention, un ou plusieurs caractères non alphabétiques risquent d'empêcher par la suite " +
-              "la génération du PDF de l'attestation"
-          )
+              "la génération du PDF de l'attestation")
         fieldSetter(text) match {
           case Left(errorMsg) =>
             sendText(errorMsg)
@@ -213,13 +205,10 @@ private class ChatterBot(
             sendText(
               "Vous avez saisi les informations suivantes :\n" + formatData(
                 user,
-                data
-              ) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir " + "utiliser les commandes pour générer des attestations. Envoyez " + "/help pour obtenir de l'aide sur les commandes disponibles."
-            )
+                data) + "\nUtilisez /start en cas d'erreur. Vous allez maintenant pouvoir " + "utiliser les commandes pour générer des attestations. Envoyez " + "/help pour obtenir de l'aide sur les commandes disponibles.")
             db ! DBProtocol.Save(user.id, data)
             debugActor.foreach(
-              _ ! s"Inserting data for ${data.firstName} ${data.lastName}"
-            )
+              _ ! s"Inserting data for ${data.firstName} ${data.lastName}")
             offerCommands(data)
           case Right(Left(dataBuilder)) =>
             requestData(dataBuilder)
@@ -239,8 +228,7 @@ private class ChatterBot(
               case Stop => Behaviors.stopped
               case msg =>
                 context.log.warn(
-                  s"Spurious message received during shutdown: $msg"
-                )
+                  s"Spurious message received during shutdown: $msg")
                 Behaviors.same
             }
           }
@@ -252,51 +240,47 @@ private class ChatterBot(
     }
   }
 
-  /** Send common shortcuts to the user as a dedicated keyboard and prompt for a
-    * command.
-    *
-    * @param data
-    *   the user data
-    * @return
-    *   the behavior to handle incoming commands
-    */
+  /**
+   * Send common shortcuts to the user as a dedicated keyboard and prompt for a
+   * command.
+   *
+   * @param data
+   *   the user data
+   * @return
+   *   the behavior to handle incoming commands
+   */
   private[this] def offerCommands(
-      data: PersonalData,
-      reasons: Seq[String] = Seq()
-  ): Behavior[ChatterBotControl] = {
+    data: PersonalData,
+    reasons: Seq[String] = Seq()): Behavior[ChatterBotControl] = {
     sendButtonsText(reasons)
     handleCommands(data)
   }
 
-  /** Handle incoming commands.
-    *
-    * @param data
-    *   the user data
-    * @return
-    *   the behavior to handle incoming commands
-    */
+  /**
+   * Handle incoming commands.
+   *
+   * @param data
+   *   the user data
+   * @return
+   *   the behavior to handle incoming commands
+   */
   private[this] def handleCommands(
-      data: PersonalData
-  ): Behavior[ChatterBotControl] = {
+    data: PersonalData): Behavior[ChatterBotControl] = {
     Behaviors.receiveMessage {
       case CachedData(_) | NoCachedData =>
         context.log.warn(
-          s"Database result for user ${user.id} arrived too late"
-        )
+          s"Database result for user ${user.id} arrived too late")
         Behaviors.same
       case FromMainBot(PrivateMessage(_)) =>
         sendText(
-          "J'ai déjà toutes les informations utiles, essayez /help pour voir les commandes disponibles"
-        )
+          "J'ai déjà toutes les informations utiles, essayez /help pour voir les commandes disponibles")
         offerCommands(data)
       case FromMainBot(PrivateCommand("start", _)) =>
         db ! DBProtocol.Delete(user.id)
         sendText(
-          "Toutes vos données personnelles ont été définitivement supprimées de la base de données"
-        )
+          "Toutes vos données personnelles ont été définitivement supprimées de la base de données")
         handleStart(
-          PersonalDataBuilder(data, user.firstName, user.lastName, StripBoth)
-        )
+          PersonalDataBuilder(data, user.firstName, user.lastName, StripBoth))
       case FromMainBot(PrivateCommand("privacy", _)) =>
         privacyPolicy()
         Behaviors.same
@@ -307,9 +291,7 @@ private class ChatterBot(
         sendText(
           s"Je dispose des données personnelles suivantes :\n" + formatData(
             user,
-            data
-          )
-        )
+            data))
         Behaviors.same
       case FromMainBot(PrivateCommand("i", Seq())) =>
         db ! DBProtocol.Delete(user.id)
@@ -318,14 +300,11 @@ private class ChatterBot(
             data,
             user.firstName,
             user.lastName,
-            StripIdentity
-          )
-        )
+            StripIdentity))
       case FromMainBot(PrivateCommand("a", Seq())) =>
         db ! DBProtocol.Delete(user.id)
         requestData(
-          PersonalDataBuilder(data, user.firstName, user.lastName, StripAddress)
-        )
+          PersonalDataBuilder(data, user.firstName, user.lastName, StripAddress))
       case FromMainBot(PrivateCommand("autre", Seq())) =>
         sendText("Il manque le(s) motif(s) de sortie")
         Behaviors.same
@@ -345,29 +324,23 @@ private class ChatterBot(
         offerCommands(data, reasons)
       case PDFFailure(_: TimeoutException) =>
         sendText(
-          "Le système est trop chargé en ce moment, réessayez un peu plus tard"
-        )
+          "Le système est trop chargé en ce moment, réessayez un peu plus tard")
         debugActor.foreach(
-          _ ! s"Timeout for receiving PDF document for ${data.firstName} ${data.lastName}"
-        )
+          _ ! s"Timeout for receiving PDF document for ${data.firstName} ${data.lastName}")
         offerCommands(data)
       case PDFFailure(PDFBuilder.NonPrintable(text)) =>
         sendText(
           s"Impossible de générer une attestation car « $text » n'est pas imprimable " +
             "dans la police de caractères utilisée par l'administration dans le document. " +
-            "Veuillez ressaisir des données en utilisant uniquement l'alphabet courant."
-        )
+            "Veuillez ressaisir des données en utilisant uniquement l'alphabet courant.")
         debugActor.foreach(
-          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: unprintable string $text"
-        )
+          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: unprintable string $text")
         offerCommands(data)
       case PDFFailure(e) =>
         sendText(
-          "Erreur interne lors de la génération du PDF, réessayez plus tard"
-        )
+          "Erreur interne lors de la génération du PDF, réessayez plus tard")
         debugActor.foreach(
-          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: $e"
-        )
+          _ ! s"Failure in PDF generation for ${data.firstName} ${data.lastName}: $e")
         offerCommands(data)
     }
   }
@@ -375,52 +348,49 @@ private class ChatterBot(
   private[this] def privacyPolicy(): Unit =
     sendText(
       GlobalConfig.privacyPolicy.getOrElse("No privacy policy available"),
-      parseMode = Some(ParseMode.Markdown)
-    )
+      parseMode = Some(ParseMode.Markdown))
 
   private[this] def help(): Unit =
     sendText(
       GlobalConfig.help.getOrElse("No help available"),
-      parseMode = Some(ParseMode.Markdown)
-    )
+      parseMode = Some(ParseMode.Markdown))
 
   private[this] def sendButtonsText(reasons: Seq[String] = Seq()): Unit =
     sendText(
       "Choisissez une attestation à générer (utilisez /help pour l'aide)",
-      makeButtons(reasons)
-    )
+      makeButtons(reasons))
 
-  /** Send an empty certificate to print and fill by hand.
-    *
-    * @param data
-    *   the user data
-    */
+  /**
+   * Send an empty certificate to print and fill by hand.
+   *
+   * @param data
+   *   the user data
+   */
   private[this] def handleEmptyPDFRequest(data: PersonalData): Unit = {
     val caption = s"Attestation pré-remplie à imprimer pour ${data.fullName}"
     implicit val timeout: Timeout = 10.seconds
     context.ask[BuildPDF, Try[Array[Byte]]](
       pdfBuilder,
-      BuildPDF(data, None, _)
-    )(_.flatten match {
-      case Success(document) => PDFSuccess(document, Some(caption), Seq())
-      case Failure(e)        => PDFFailure(e)
-    })
+      BuildPDF(data, None, _))(_.flatten match {
+        case Success(document) => PDFSuccess(document, Some(caption), Seq())
+        case Failure(e)        => PDFFailure(e)
+      })
   }
 
-  /** Handle a PDF request incoming command.
-    *
-    * @param data
-    *   the user data
-    * @param reasons
-    *   the reasons for going out
-    * @param args
-    *   the arguments given by the user (such as "oubli" or an explicit hour)
-    */
+  /**
+   * Handle a PDF request incoming command.
+   *
+   * @param data
+   *   the user data
+   * @param reasons
+   *   the reasons for going out
+   * @param args
+   *   the arguments given by the user (such as "oubli" or an explicit hour)
+   */
   private[this] def handlePDFRequest(
-      data: PersonalData,
-      reasons: Seq[String],
-      args: Seq[String]
-  ): Unit = {
+    data: PersonalData,
+    reasons: Seq[String],
+    args: Seq[String]): Unit = {
     val (validReasons, invalidReasons, validReasonsRaw) = {
       val (v, i) = reasons.partition(Authorization.reasons.contains)
       (Authorization.unifyValidReasons(v), i.toSet.toSeq, v)
@@ -430,8 +400,7 @@ private class ChatterBot(
         "Aucun motif valable trouvé, génération du PDF impossible"
       } else { "Seuls les autres motifs seront utilisés" }
       sendText(
-        s"Les motifs suivants sont invalides : ${invalidReasons.mkString(", ")}. $next."
-      )
+        s"Les motifs suivants sont invalides : ${invalidReasons.mkString(", ")}. $next.")
     }
     if (validReasons.isEmpty) {
       return
@@ -439,8 +408,7 @@ private class ChatterBot(
     if (validReasons.length > 1) {
       sendText(
         "⚠️ Attention, rien dans les textes réglementaires ne semble indiquer qu'il est possible " +
-          "d'utiliser plusieurs motifs simultanément"
-      )
+          "d'utiliser plusieurs motifs simultanément")
     }
     parseHour(args) match {
       case Right(outputDateTime) =>
@@ -451,8 +419,10 @@ private class ChatterBot(
         }
         val day = outputDateTime.getDayOfWeek.toFrenchDay
         val caption =
-          s"Sortie ${validReasons.map(Authorization.prettyReason).mkString("/")} $day à ${utils
-            .timeText(outputDateTime)} pour ${data.fullName}"
+          s"Sortie ${validReasons.map(Authorization.prettyReason).mkString("/")} $day à ${
+            utils
+              .timeText(outputDateTime)
+          } pour ${data.fullName}"
         implicit val timeout: Timeout = 10.seconds
         context.ask[BuildPDF, Try[Array[Byte]]](
           pdfBuilder,
@@ -460,18 +430,14 @@ private class ChatterBot(
             data,
             Some(
               Authorization(
-                output = outputDateTime,
-                made = madeTime,
-                reasons = validReasons
-              )
-            ),
-            _
-          )
-        )(_.flatten match {
-          case Success(document) =>
-            PDFSuccess(document, Some(caption), validReasonsRaw)
-          case Failure(e) => PDFFailure(e)
-        })
+                output  = outputDateTime,
+                made    = madeTime,
+                reasons = validReasons)),
+            _))(_.flatten match {
+            case Success(document) =>
+              PDFSuccess(document, Some(caption), validReasonsRaw)
+            case Failure(e) => PDFFailure(e)
+          })
       case Left(text) =>
         sendText(text)
         sendButtonsText()
@@ -483,27 +449,27 @@ private class ChatterBot(
 
 object ChatterBot {
 
-  /** Build a chatter bot for an individual conversation.
-    *
-    * @param client
-    *   the Telegram client to send outgoing messages
-    * @param user
-    *   the Telegram bot API `User` structure describing the peer
-    * @param pdfBuilder
-    *   the actor able to build PDF documents
-    * @param db
-    *   the database to retrieve user data from or store it into
-    * @param debugActor
-    *   if defined, the actor to send debugging messages to
-    * @return
-    */
+  /**
+   * Build a chatter bot for an individual conversation.
+   *
+   * @param client
+   *   the Telegram client to send outgoing messages
+   * @param user
+   *   the Telegram bot API `User` structure describing the peer
+   * @param pdfBuilder
+   *   the actor able to build PDF documents
+   * @param db
+   *   the database to retrieve user data from or store it into
+   * @param debugActor
+   *   if defined, the actor to send debugging messages to
+   * @return
+   */
   def apply(
-      client: RequestHandler[Future],
-      user: User,
-      pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
-      db: ActorRef[DBCommand],
-      debugActor: Option[ActorRef[String]]
-  ): Behavior[PerChatBotCommand] =
+    client: RequestHandler[Future],
+    user: User,
+    pdfBuilder: ActorRef[PDFBuilder.BuildPDF],
+    db: ActorRef[DBCommand],
+    debugActor: Option[ActorRef[String]]): Behavior[PerChatBotCommand] =
     Behaviors
       .setup[ChatterBotControl] { context =>
         // Actor in charge of sending ordered outgoing messages to the peer we are in conversation
@@ -517,28 +483,26 @@ object ChatterBot {
           user,
           pdfBuilder,
           db,
-          debugActor
-        ).startingPoint
+          debugActor).startingPoint
       }
       .transformMessages {
         // We expand commands into the generic command here
         case PrivateCommand(
-              command,
-              args
-            ) if Authorization.reasons.contains(command) =>
+          command,
+          args
+          ) if Authorization.reasons.contains(command) =>
           FromMainBot(PrivateCommand("autre", command +: args))
         case fromMainBot => FromMainBot(fromMainBot)
       }
 
   sealed trait ChatterBotControl
   case class FromMainBot(fromMainBot: PerChatBotCommand)
-      extends ChatterBotControl
+    extends ChatterBotControl
 
   private case class PDFSuccess(
       content: Array[Byte],
       caption: Option[String],
-      reasons: Seq[String]
-  ) extends ChatterBotControl
+      reasons: Seq[String]) extends ChatterBotControl
   private case class PDFFailure(e: Throwable) extends ChatterBotControl
 
   private case class CachedData(data: PersonalData) extends ChatterBotControl
@@ -552,35 +516,32 @@ object ChatterBot {
     Seq(latestReasons.map("/" + _), latestReasons.map("/" + _ + " oubli"))
   }
 
-  /** Parse command arguments into a date and time.
-    *
-    * @param args
-    *   the arguments (nothing explicit, "oubli", "11h30")
-    * @return
-    *   a corresponding date and time in `Right` or an error message in `Left`
-    */
+  /**
+   * Parse command arguments into a date and time.
+   *
+   * @param args
+   *   the arguments (nothing explicit, "oubli", "11h30")
+   * @return
+   *   a corresponding date and time in `Right` or an error message in `Left`
+   */
   private def parseHour(args: Seq[String]): Either[String, LocalDateTime] = {
     val now = LocalDateTime.now()
     args match {
       case Seq("oubli") =>
         Right(
-          now.minusMinutes(20 + now.getMinute - (now.getMinute / 5f).round * 5)
-        )
+          now.minusMinutes(20 + now.getMinute - (now.getMinute / 5f).round * 5))
       case Seq(spec) =>
         try {
           val time =
             LocalTime.parse(
               spec.replace(':', 'h'),
-              DateTimeFormatter.ofPattern("H'h'[mm]")
-            )
+              DateTimeFormatter.ofPattern("H'h'[mm]"))
           addCredibleDate(time, now)
             .map(dt => Right(dt))
             .getOrElse(
               Left(
                 "Cette heure est trop différente de l'heure courante, je ne sais pas s'il s'agit " +
-                  "d'hier ou d'aujourd'hui. Je ne suis pas prévu pour ça."
-              )
-            )
+                  "d'hier ou d'aujourd'hui. Je ne suis pas prévu pour ça."))
         } catch {
           case _: Exception => Left("Heure non conforme")
         }
@@ -589,22 +550,22 @@ object ChatterBot {
     }
   }
 
-  /** Add a credible date to the outputTime if possible. It will be either
-    * yesterday, today, or tomorrow, whatever makes the difference with
-    * nowDateTime smaller.
-    *
-    * @param outputTime
-    *   the output time to augment with a date
-    * @param nowDateTime
-    *   the reference date and time
-    * @return
-    *   Either the output time with a credible date, or None if 8 hours or more
-    *   (approximately) separate both inputs.
-    */
+  /**
+   * Add a credible date to the outputTime if possible. It will be either
+   * yesterday, today, or tomorrow, whatever makes the difference with
+   * nowDateTime smaller.
+   *
+   * @param outputTime
+   *   the output time to augment with a date
+   * @param nowDateTime
+   *   the reference date and time
+   * @return
+   *   Either the output time with a credible date, or None if 8 hours or more
+   *   (approximately) separate both inputs.
+   */
   def addCredibleDate(
-      outputTime: LocalTime,
-      nowDateTime: LocalDateTime
-  ): Option[LocalDateTime] = {
+    outputTime: LocalTime,
+    nowDateTime: LocalDateTime): Option[LocalDateTime] = {
     val (nowDate, nowTime) = (nowDateTime.toLocalDate, nowDateTime.toLocalTime)
     val hoursBetweenNowAndOutput =
       (outputTime.getHour - nowTime.getHour + 24) % 24
@@ -628,8 +589,9 @@ object ChatterBot {
        |- Numéro unique Telegram : ${user.id}
        |""".stripMargin
 
-  /** Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
-    */
+  /**
+   * Enrich Java's `DayOfWeek` enumeration with a new `toFrenchDay` field
+   */
   implicit class FrenchDayOfWeek(dow: DayOfWeek) {
     val toFrenchDay: String = dow match {
       case DayOfWeek.MONDAY    => "lundi"

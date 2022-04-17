@@ -19,26 +19,26 @@ object BotUtils {
 
     import WithIdleTimeout._
 
-    /** Surround the behavior with a timeout controlling one. All messages are
-      * forwarded to the inner behavior. However, if no message appears in the
-      * specified delay, `timeout` message wil be sent to `controller`.
-      *
-      * @param timeout
-      *   the timeout delay
-      * @param controller
-      *   the actor to send `timeoutMessage` to
-      * @param timeoutMessage
-      *   the message sent in case of timeout
-      * @tparam U
-      *   the type of message `controller` expects
-      * @return
-      *   the enriched behavior
-      */
+    /**
+     * Surround the behavior with a timeout controlling one. All messages are
+     * forwarded to the inner behavior. However, if no message appears in the
+     * specified delay, `timeout` message wil be sent to `controller`.
+     *
+     * @param timeout
+     *   the timeout delay
+     * @param controller
+     *   the actor to send `timeoutMessage` to
+     * @param timeoutMessage
+     *   the message sent in case of timeout
+     * @tparam U
+     *   the type of message `controller` expects
+     * @return
+     *   the enriched behavior
+     */
     def withIdleTimeout[U](
-        timeout: FiniteDuration,
-        controller: ActorRef[U],
-        timeoutMessage: U
-    ): Behavior[T] =
+      timeout: FiniteDuration,
+      controller: ActorRef[U],
+      timeoutMessage: U): Behavior[T] =
       Behaviors
         .setup[WITMessage[T]] { context =>
           val inner = context.spawnAnonymous(behavior)
@@ -78,22 +78,22 @@ object BotUtils {
 
     import WithThrottling._
 
-    /** Surround the behaviour with a throttling one. Incoming messages are sent
-      * to the inner behavior with an inter-arrival delay. They are queued in
-      * the meantime. If the queue size is greater than the maximum allowed, the
-      * queue is emptied and all messages in it are ignored.
-      *
-      * @param delay
-      *   the inter-arrival delay between messages
-      * @param maxQueueSize
-      *   the maximum queue size
-      * @return
-      *   the throttled behavior
-      */
+    /**
+     * Surround the behaviour with a throttling one. Incoming messages are sent
+     * to the inner behavior with an inter-arrival delay. They are queued in
+     * the meantime. If the queue size is greater than the maximum allowed, the
+     * queue is emptied and all messages in it are ignored.
+     *
+     * @param delay
+     *   the inter-arrival delay between messages
+     * @param maxQueueSize
+     *   the maximum queue size
+     * @return
+     *   the throttled behavior
+     */
     def withThrottling(
-        delay: FiniteDuration,
-        maxQueueSize: Int
-    ): Behavior[T] = {
+      delay: FiniteDuration,
+      maxQueueSize: Int): Behavior[T] = {
       Behaviors
         .setup[ThrottleControl[T]] { context =>
           val inner = context.spawnAnonymous(behavior)
@@ -124,16 +124,18 @@ object BotUtils {
             }
           }
         }
-        .transformMessages[T] { case message =>
-          ThrottleMessage(message)
+        .transformMessages[T] {
+          case message =>
+            ThrottleMessage(message)
         }
     }
   }
 
-  /** Extends [[com.bot4s.telegram.future.Polling Polling]] with an idempotent
-    * shutdown message, as the default implementation throws an exception if
-    * `shutdown()` is called several times in a row.
-    */
+  /**
+   * Extends [[com.bot4s.telegram.future.Polling Polling]] with an idempotent
+   * shutdown message, as the default implementation throws an exception if
+   * `shutdown()` is called several times in a row.
+   */
   trait IdempotentShutdown extends Polling {
     private[this] var shutdownInitiated: Boolean = false
 

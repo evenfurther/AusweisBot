@@ -13,9 +13,8 @@ import scala.concurrent.Future
 private class DebugBot(
     context: ActorContext[String],
     token: String,
-    chatId: ChatId
-) extends AbstractBehavior[String](context)
-    with TelegramBot {
+    chatId: ChatId) extends AbstractBehavior[String](context)
+  with TelegramBot {
   private[this] implicit val system: ActorSystem = context.system.toClassic
   override val client: RequestHandler[Future] = new AkkaHttpClient(token)
 

@@ -16,12 +16,12 @@ class BotUtilsSpec extends Specification {
       val witness = testKit.createTestProbe[Int]()
       val actor = testKit.spawn(
         Behaviors
-          .receiveMessage[Int] { case i =>
-            witness.ref ! i
-            Behaviors.same
+          .receiveMessage[Int] {
+            case i =>
+              witness.ref ! i
+              Behaviors.same
           }
-          .withThrottling(20.milliseconds, 5)
-      )
+          .withThrottling(20.milliseconds, 5))
       (1 to 6).foreach(actor ! _)
       (1 to 6).foreach(witness.expectMessage(_))
       witness.expectNoMessage()
@@ -32,12 +32,12 @@ class BotUtilsSpec extends Specification {
       val witness = testKit.createTestProbe[Int]()
       val actor = testKit.spawn(
         Behaviors
-          .receiveMessage[Int] { case i =>
-            witness.ref ! i
-            Behaviors.same
+          .receiveMessage[Int] {
+            case i =>
+              witness.ref ! i
+              Behaviors.same
           }
-          .withThrottling(20.milliseconds, 5)
-      )
+          .withThrottling(20.milliseconds, 5))
       (1 to 9).foreach(actor ! _)
       witness.expectMessage(1)
       // 2 to 6 are queued, 7 erases everything
@@ -55,12 +55,12 @@ class BotUtilsSpec extends Specification {
       val controller = testKit.createTestProbe[String]()
       val actor = testKit.spawn(
         Behaviors
-          .receiveMessage[Int] { case i =>
-            witness.ref ! i
-            Behaviors.same
+          .receiveMessage[Int] {
+            case i =>
+              witness.ref ! i
+              Behaviors.same
           }
-          .withIdleTimeout(20.milliseconds, controller.ref, "idle")
-      )
+          .withIdleTimeout(20.milliseconds, controller.ref, "idle"))
       (1 to 6).foreach(actor ! _)
       (1 to 5).foreach(witness.expectMessage(_))
       controller.expectNoMessage(5.milliseconds)
