@@ -16,6 +16,8 @@ jobs:
           key: ivy2-files
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Setup Scala
         uses: olafurpg/setup-scala@v10
         with:
@@ -40,5 +42,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Docker build
         uses: docker/build-push-action@v2

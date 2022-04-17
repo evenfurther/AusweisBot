@@ -2,7 +2,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-import io.nayuki.qrcodegen.QrCode
+import io.nayuki.fastqrcodegen.QrCode
 import models.{Authorization, PersonalData}
 import org.apache.commons.lang3.StringUtils
 

@@ -3,6 +3,7 @@ MAINTAINER Samuel Tardieu, sam@rfc1149.net
 
 ADD build.sbt /workspace/
 ADD src /workspace/src/
+ADD thirdparty /workspace/thirdparty
 ADD project/build.properties project/plugins.sbt /workspace/project/
 RUN cd /workspace && sbt assembly genCommands
 

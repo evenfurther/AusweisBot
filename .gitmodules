@@ -1,0 +1,4 @@
+[submodule "thirdparty/QR-Code-generator"]
+	path = thirdparty/QR-Code-generator
+	url = https://github.com/nayuki/QR-Code-generator
+	branch = master
