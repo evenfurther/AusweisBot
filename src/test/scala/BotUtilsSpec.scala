@@ -60,12 +60,12 @@ class BotUtilsSpec extends Specification {
               witness.ref ! i
               Behaviors.same
           }
-          .withIdleTimeout(20.milliseconds, controller.ref, "idle"))
+          .withIdleTimeout(50.milliseconds, controller.ref, "idle"))
       (1 to 6).foreach(actor ! _)
       (1 to 5).foreach(witness.expectMessage(_))
       controller.expectNoMessage(5.milliseconds)
       witness.expectMessage(6)
-      controller.expectMessage(50.milliseconds, "idle")
+      controller.expectMessage(100.milliseconds, "idle")
       success
     }
 
