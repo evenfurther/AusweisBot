@@ -7,9 +7,9 @@ scalaVersion := "2.12.16"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.6.19",
-  "com.typesafe.akka" %% "akka-stream" % "2.6.19",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.19",
+  "com.typesafe.akka" %% "akka-actor" % "2.6.20",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.20",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.20",
   "com.typesafe.akka" %% "akka-http" % "10.2.9",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.apache.pdfbox" % "pdfbox" % "2.0.26",
@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.16.1" % "test",
   "com.google.zxing" % "core" % "3.4.1" % "test",
   "com.google.zxing" % "javase" % "3.4.1" % "test",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.19" % Test
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.20" % Test
 )
 
 resolvers += Resolver.url(
