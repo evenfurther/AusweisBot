@@ -7,7 +7,7 @@ scalaVersion := "2.12.18"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.6.20",
+  "com.typesafe.akka" %% "akka-actor" % "2.8.4",
   "com.typesafe.akka" %% "akka-stream" % "2.6.20",
   "com.typesafe.akka" %% "akka-actor-typed" % "2.6.20",
   "com.typesafe.akka" %% "akka-http" % "10.5.2",
