@@ -175,7 +175,6 @@ object Authorization {
    * then in analphabetical order.
    */
   val reasonsAndAliases: Seq[(String, Seq[String], String)] = {
-    import scala.math.Ordering.Implicits.seqDerivedOrdering
     data
       .sortBy(-_._2)
       .map {
