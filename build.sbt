@@ -22,7 +22,8 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.20.2" % "test",
   "com.google.zxing" % "core" % "3.5.2" % "test",
   "com.google.zxing" % "javase" % "3.5.2" % "test",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.4" % Test
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.4" % Test,
+  "biz.enef" %% "slogging" % "0.6.2"
 )
 
 resolvers += Resolver.url(
