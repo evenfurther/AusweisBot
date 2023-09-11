@@ -99,9 +99,9 @@ object PDFBuilder {
     x: Float,
     y: Float,
     text: String,
-    size: Int) {
+    size: Int): Unit = {
     content.beginText()
-    content.setFont(new PDType1Font(FontName.HELVETICA), size)
+    content.setFont(new PDType1Font(FontName.HELVETICA), size.toFloat)
     content.newLineAtOffset(x, y)
     // As of 2020-03-01, all accents are supposed to be stripped, but this
     // has not always been the case in the governement generator and may
@@ -139,7 +139,7 @@ object PDFBuilder {
     }
   }
 
-  private def addMetadata(doc: PDDocument) {
+  private def addMetadata(doc: PDDocument): Unit = {
     val info = doc.getDocumentInformation()
     info.setTitle("COVID-19 - Déclaration de déplacement")
     info.setSubject("Attestation de déplacement dérogatoire")
