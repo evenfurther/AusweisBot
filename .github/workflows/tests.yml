@@ -1,9 +1,7 @@
 name: Validation process
 on:
-  push:
-    branches:
-      - staging
-      - trying
+  pull_request:
+  merge_group:
 jobs:
   test:
     name: Unit and building tests
