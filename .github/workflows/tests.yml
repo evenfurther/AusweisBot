@@ -43,4 +43,4 @@ jobs:
         with:
           submodules: recursive
       - name: Docker build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v4
