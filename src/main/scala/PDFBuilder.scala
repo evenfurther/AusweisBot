@@ -4,8 +4,10 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import models._
 import org.apache.commons.lang3.StringUtils
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.{PDFont, PDType0Font, PDType1Font}
+import org.apache.pdfbox.pdmodel.font.PDType1Font
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.apache.pdfbox.pdmodel.{PDDocument, PDPage, PDPageContentStream}
 import scala.util.Try
@@ -26,7 +28,7 @@ object PDFBuilder {
    */
   def buildPDF(data: PersonalData, auth: Option[Authorization]): Array[Byte] = {
     import utils._
-    val doc = PDDocument.load(GlobalConfig.certificate)
+    val doc = Loader.loadPDF(GlobalConfig.certificate)
     PDFBuilder.addMetadata(doc)
     val qrCodeImg = auth.map { auth =>
       val qrCode = QRCode(300, data, auth)
@@ -99,7 +101,7 @@ object PDFBuilder {
     text: String,
     size: Int) {
     content.beginText()
-    content.setFont(PDType1Font.HELVETICA, size)
+    content.setFont(new PDType1Font(FontName.HELVETICA), size)
     content.newLineAtOffset(x, y)
     // As of 2020-03-01, all accents are supposed to be stripped, but this
     // has not always been the case in the governement generator and may

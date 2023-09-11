@@ -1,7 +1,7 @@
 import org.specs2.mutable._
 import models.{Authorization, PersonalData}
 import java.time.{LocalDate, LocalDateTime}
-import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.Loader
 import org.specs2.matcher.Matcher
 import scala.util.{Failure, Try}
 
@@ -23,7 +23,7 @@ class PDFBuilderSpec extends Specification {
 
   val beAValidPDF: Matcher[Array[Byte]] = { b: Array[Byte] =>
     try {
-      PDDocument.load(b).close()
+      Loader.loadPDF(b).close()
       success
     } catch {
       case _: Throwable => failure
