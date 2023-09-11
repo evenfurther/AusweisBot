@@ -31,6 +31,8 @@ resolvers += Resolver.url(
   url("https://maven.m-k.mx/")
 )(Patterns(Resolver.mavenStyleBasePattern))
 
+assembly / mainClass := Some("Ausweis")
+
 assembly / assemblyOutputPath := file("ausweis.jar")
 
 assembly / test := {}
