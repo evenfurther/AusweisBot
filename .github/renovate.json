@@ -2,12 +2,16 @@
   "extends": ["config:recommended", ":automergeMinor", ":automergePr"],
   "packageRules": [
     {
-      "matchPackagePatterns": ["^akka-"],
+      "matchPackagePrefixes": ["com.typesafe.akka:akka-"],
       "groupName": "akka"
     },
     {
-      "matchPackagePatterns": ["^telegram-"],
-      "groupName": "bot4s-telegram"
+      "matchPackagePrefixes": ["com.google.zxing:"],
+      "groupName": "zxing"
+    },
+    {
+      "matchPackagePrefixes": ["com.bot4s:telegram"],
+      "groupName": "telegram"
     }
   ]
 }
