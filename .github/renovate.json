@@ -1,5 +1,5 @@
 {
-  "extends": ["config:recommended", ":automergeMinor", ":automergeBranch"],
+  "extends": ["config:recommended", ":automergeMinor", ":automergePr"],
   "packageRules": [
     {
       "matchPackagePrefixes": ["com.typesafe.akka:akka-"],
