@@ -7,7 +7,7 @@ ADD thirdparty /workspace/thirdparty
 ADD project/build.properties project/plugins.sbt /workspace/project/
 RUN cd /workspace && sbt assembly genCommands
 
-FROM openjdk:17.0.2-jdk-oracle
+FROM openjdk:21-jdk-oracle
 COPY --from=0 /workspace/ausweis.jar .
 COPY --from=0 /workspace/commands.txt .
 ADD start-with-env.sh ./
