@@ -38,7 +38,8 @@ assembly / assemblyOutputPath := file("ausweis.jar")
 assembly / test := {}
 
 assembly / assemblyMergeStrategy := {
-  case "module-info.class" => MergeStrategy.discard // Necessary for jackson
+  case "module-info.class" => MergeStrategy.discard
+  case PathList("META-INF", _*) => MergeStrategy.discard
   case x =>
     val oldStrategy = (assembly/assemblyMergeStrategy).value
     oldStrategy(x)
