@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-lang3" % "3.14.0",
   "com.bot4s" %% "telegram-core" % "5.7.1",
   "com.bot4s" %% "telegram-akka" % "5.7.1",
-  "ch.qos.logback" % "logback-classic" % "1.4.13",
+  "ch.qos.logback" % "logback-classic" % "1.4.14",
   "com.github.tototoshi" %% "scala-csv" % "1.3.10",
   "org.specs2" %% "specs2-core" % "4.20.3" % "test",
   "com.google.zxing" % "core" % "3.5.2" % "test",
