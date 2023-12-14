@@ -25,12 +25,12 @@ jobs:
       - name: SBT tests and artifacts
         run: sbt test assembly genCommands
       - name: Upload ausweis.jar artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ausweis.jar
           path: ausweis.jar
       - name: Upload commands.txt artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: commands.txt
           path: commands.txt
