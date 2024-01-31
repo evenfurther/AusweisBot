@@ -20,8 +20,8 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.4.14",
   "com.github.tototoshi" %% "scala-csv" % "1.3.10",
   "org.specs2" %% "specs2-core" % "4.20.5" % "test",
-  "com.google.zxing" % "core" % "3.5.2" % "test",
-  "com.google.zxing" % "javase" % "3.5.2" % "test",
+  "com.google.zxing" % "core" % "3.5.3" % "test",
+  "com.google.zxing" % "javase" % "3.5.3" % "test",
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.5" % Test,
   "biz.enef" %% "slogging" % "0.6.2"
 )
