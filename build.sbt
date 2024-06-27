@@ -7,9 +7,9 @@ scalaVersion := "2.13.14"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.8.5",
-  "com.typesafe.akka" %% "akka-stream" % "2.8.5",
-  "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5",
+  "com.typesafe.akka" %% "akka-actor" % "2.8.6",
+  "com.typesafe.akka" %% "akka-stream" % "2.8.6",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.8.6",
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.apache.pdfbox" % "pdfbox" % "3.0.2",
@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.20.7" % "test",
   "com.google.zxing" % "core" % "3.5.3" % "test",
   "com.google.zxing" % "javase" % "3.5.3" % "test",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.5" % Test,
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.6" % Test,
   "biz.enef" %% "slogging" % "0.6.2"
 )
 
