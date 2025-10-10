@@ -1,17 +1,27 @@
 {
-  "extends": ["config:recommended", ":automergeMinor", ":automergePr"],
+  "extends": [
+    "config:recommended",
+    ":automergeMinor",
+    ":automergePr"
+  ],
   "packageRules": [
     {
-      "matchPackagePrefixes": ["com.typesafe.akka:akka-"],
-      "groupName": "akka"
+      "groupName": "akka",
+      "matchPackageNames": [
+        "com.typesafe.akka:akka-{/,}**"
+      ]
     },
     {
-      "matchPackagePrefixes": ["com.google.zxing:"],
-      "groupName": "zxing"
+      "groupName": "zxing",
+      "matchPackageNames": [
+        "com.google.zxing:{/,}**"
+      ]
     },
     {
-      "matchPackagePrefixes": ["com.bot4s:telegram"],
-      "groupName": "telegram"
+      "groupName": "telegram",
+      "matchPackageNames": [
+        "com.bot4s:telegram{/,}**"
+      ]
     }
   ]
 }
