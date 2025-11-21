@@ -1,6 +1,10 @@
 FROM hseeberger/scala-sbt:11.0.8_1.4.1_2.12.12
 MAINTAINER Samuel Tardieu, sam@rfc1149.net
 
+# Update CA certificates to fix SSL issues
+USER root
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 ADD build.sbt /workspace/
 ADD src /workspace/src/
 ADD thirdparty /workspace/thirdparty
