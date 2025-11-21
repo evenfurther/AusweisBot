@@ -42,7 +42,7 @@ jobs:
         with:
           java-version: "adopt@1.11"
       - name: Coursier cache
-        uses: coursier/cache-action@v6
+        uses: coursier/cache-action@v7
       - name: SBT artifacts
         run: sbt assembly genCommands
       - name: Upload ausweis.jar artifact
