@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % "10.5.3",
   "de.heikoseeberger" %% "akka-http-play-json" % "1.39.2",
   "org.apache.pdfbox" % "pdfbox" % "3.0.6",
-  "commons-io" % "commons-io" % "2.20.0",
+  "commons-io" % "commons-io" % "2.21.0",
   "org.apache.commons" % "commons-lang3" % "3.20.0",
   "com.bot4s" %% "telegram-core" % "6.0.0",
   "com.bot4s" %% "telegram-akka" % "6.0.0",
