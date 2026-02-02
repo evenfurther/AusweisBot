@@ -46,12 +46,12 @@ jobs:
       - name: SBT artifacts
         run: sbt assembly genCommands
       - name: Upload ausweis.jar artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ausweis.jar
           path: ausweis.jar
       - name: Upload commands.txt artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: commands.txt
           path: commands.txt
