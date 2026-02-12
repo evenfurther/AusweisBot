@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   "org.apache.pdfbox" % "pdfbox" % "3.0.6",
   "commons-io" % "commons-io" % "2.21.0",
   "org.apache.commons" % "commons-lang3" % "3.20.0",
-  "com.bot4s" %% "telegram-core" % "6.0.1",
+  "com.bot4s" %% "telegram-core" % "7.0.0",
   "com.bot4s" %% "telegram-akka" % "6.0.1",
   "ch.qos.logback" % "logback-classic" % "1.5.29",
   "com.github.tototoshi" %% "scala-csv" % "2.0.0",
