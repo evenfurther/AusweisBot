@@ -2,7 +2,7 @@ import sbt._
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 
-scalaVersion := "2.13.18"
+scalaVersion := "3.8.2"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
